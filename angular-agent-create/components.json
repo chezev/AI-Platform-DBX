@@ -1,0 +1,6 @@
+{
+  "componentsPath": "src/app/shared/ui",
+  "buildable": false,
+  "generateAs": "entrypoint",
+  "importAlias": "@sds/ui"
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI UX Governance"
+  short_description: "SDS and shadcn UI quality governance checks"
+  default_prompt: "Use $ui-ux-governance to implement or audit this screen for SDS compliance, shadcn composition, Gestalt grouping, Nielsen heuristics, and WCAG 2.2."

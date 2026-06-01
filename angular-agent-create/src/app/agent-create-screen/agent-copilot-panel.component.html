@@ -1,0 +1,50 @@
+<section class="copilot-panel" aria-label="Copilot assistant">
+  <header>
+    <div>
+      <app-sds-icon name="ai-panel" [size]="20"></app-sds-icon>
+      <strong>AI Assist</strong>
+    </div>
+    <button type="button" aria-label="Close copilot" (click)="closePanel.emit()">
+      <app-sds-icon name="x" [size]="16"></app-sds-icon>
+    </button>
+  </header>
+
+  <div class="copilot-body">
+    <div class="copilot-intro">
+      <p>
+        Welcome to the Darwinbox Agent Copilot. I am an AI assistant that helps you create, review, and manage HR automation workflows across Darwinbox.
+      </p>
+      <p>I can help you with:</p>
+      <div class="copilot-help-line">
+        <app-sds-icon name="wrench" [size]="18"></app-sds-icon>
+        <span>Building Darwinbox agents for HR tasks, approvals, integrations, and employee journeys</span>
+      </div>
+    </div>
+
+    <article class="copilot-prompt-card">
+      Do we need any improvements of this agent?
+    </article>
+
+    <div class="copilot-thinking">
+      <strong>Thinking...</strong>
+      <span>Analyzing your request...</span>
+    </div>
+  </div>
+
+  <footer>
+    <label for="copilot-input" class="visually-hidden">Ask Copilot</label>
+    <input
+      id="copilot-input"
+      type="text"
+      placeholder="Build Agents..."
+      [value]="copilotPrompt()"
+      (input)="onCopilotPromptInput($any($event.target).value)"
+    />
+    <button type="button" class="attachment-button" aria-label="Attach context">
+      <app-sds-icon name="paperclip" [size]="16"></app-sds-icon>
+    </button>
+    <button type="button" class="send-button" aria-label="Send Copilot message">
+      <app-sds-icon name="send" [size]="16"></app-sds-icon>
+    </button>
+  </footer>
+</section>

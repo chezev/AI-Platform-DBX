@@ -1,0 +1,489 @@
+<div class="create-agent-shell" [class.has-copilot]="workspaceMode() === 'copilot'">
+  <app-sds-topbar searchId="create-global-search"></app-sds-topbar>
+
+  <nav class="create-subheader" aria-label="Create agent header">
+    <div class="subheader-title">
+      <a routerLink="/agent-creation/startup" class="back-link" aria-label="Back to create options">
+        <app-sds-icon name="arrow-left" [size]="12"></app-sds-icon>
+      </a>
+      <span>{{ displayName }}</span>
+      <strong>{{ status() }}</strong>
+    </div>
+
+    <div class="subheader-actions">
+      <a routerLink="/agent-creation/test" sdsButton variant="inverse-secondary" size="xs">Test Agent</a>
+      <button type="button" sdsButton variant="inverse-primary" size="xs" (click)="saveAgent('Draft', $event, 'create')">Create Agent</button>
+      <div class="action-menu-anchor">
+        <button type="button" sdsIconButton variant="inverse" size="xs" aria-label="More create actions" (click)="toggleActionMenu($event)">
+          <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+        </button>
+
+        @if (actionMenuOpen()) {
+          <div class="action-menu" role="menu" (click)="$event.stopPropagation()">
+            <button type="button" role="menuitem" (click)="saveAgent('Draft', $event, 'draft')">Save As Draft</button>
+            <button type="button" role="menuitem" (click)="saveAgent('Active', $event, 'activate')">Create & Activate</button>
+          </div>
+        }
+      </div>
+    </div>
+  </nav>
+
+  <main class="creation-workspace" aria-label="Agent creation workspace">
+    <aside class="side-panel-shell" aria-label="Agent creation side panel">
+      @if (workspaceMode() === 'manual') {
+        <section class="config-panel" aria-label="Agent configuration navigation">
+          <hlm-sidebar-content class="config-sidebar-content">
+            <hlm-sidebar-group class="config-sidebar-group">
+              <div hlmSidebarGroupContent class="config-sidebar-group-content">
+                <ul hlmSidebarMenu class="config-sidebar-menu">
+                  <li hlmSidebarMenuItem>
+                    <button type="button" hlmSidebarMenuButton class="config-sidebar-parent" tabindex="-1" aria-disabled="true">
+                      <app-sds-icon name="gear" [size]="14"></app-sds-icon>
+                      <span>Agent Configuration</span>
+                    </button>
+
+                    <ul hlmSidebarMenuSub class="config-sidebar-sub-menu" [attr.data-active-section]="activeConfigSection()">
+                      @for (item of configNavItems; track item.id) {
+                        <li hlmSidebarMenuSubItem>
+                          <button
+                            type="button"
+                            hlmSidebarMenuSubButton
+                            size="md"
+                            class="config-sidebar-sub-button"
+                            [isActive]="activeConfigSection() === item.id"
+                            [class.is-active]="activeConfigSection() === item.id"
+                            [attr.aria-current]="activeConfigSection() === item.id ? 'page' : null"
+                            (click)="scrollToSectionById(item.id)"
+                          >
+                            <app-sds-icon [name]="item.icon" [size]="16"></app-sds-icon>
+                            <span>{{ item.label }}</span>
+                          </button>
+                        </li>
+                      }
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </hlm-sidebar-group>
+          </hlm-sidebar-content>
+        </section>
+      } @else {
+        <app-agent-copilot-panel (closePanel)="setWorkspaceMode('manual')"></app-agent-copilot-panel>
+      }
+
+      <div class="mode-switcher" aria-label="Configuration mode switcher">
+        <button type="button" [class.is-active]="workspaceMode() === 'manual'" aria-label="Manual configuration" (click)="setWorkspaceMode('manual')">
+          <app-sds-icon name="gear" [size]="18"></app-sds-icon>
+        </button>
+        <button type="button" [class.is-active]="workspaceMode() === 'copilot'" aria-label="Copilot configuration" (click)="setWorkspaceMode('copilot')">
+          <app-sds-icon name="ai-panel" [size]="18"></app-sds-icon>
+        </button>
+      </div>
+    </aside>
+
+    <section class="form-scroll" aria-label="Agent manual configuration" (scroll)="onFormScroll($event)">
+      <form [formGroup]="agentForm" class="agent-form">
+        <article id="overview" class="config-card" sdsCard>
+          <header class="card-title-row" sdsCardHeader>
+            <h2 sdsCardTitle>Overview</h2>
+            <a href="#overview" class="quick-link">
+              <app-sds-icon name="sparkles" [size]="12"></app-sds-icon>
+              Quick Start
+            </a>
+          </header>
+
+          <section class="form-section" sdsFormSection aria-label="Identity">
+            <header sdsSectionHeader>
+              <h3>Identity</h3>
+              <p>Give your agent a clear name, description, and select a project.</p>
+            </header>
+
+            <div class="field-grid two-columns" sdsFieldGrid data-columns="2">
+              <label class="field" sdsField for="agent-name">
+                <span>Name</span>
+                <input sdsInput id="agent-name" type="text" formControlName="name" placeholder="Enter agent name" />
+              </label>
+
+              <div class="field" sdsField>
+                <span>Project <strong>*</strong></span>
+                <div class="sds-form-select" sdsSelect [value]="agentForm.controls.project.value" (valueChange)="onProjectChange($any($event))">
+                  <sds-select-trigger>
+                    <span class="select-display-label">{{ agentForm.controls.project.value || 'Select project' }}</span>
+                  </sds-select-trigger>
+
+                  <sds-select-content *sdsSelectPortal>
+                    @for (project of projectOptions; track trackByValue($index, project)) {
+                      <sds-select-item [value]="project">{{ project }}</sds-select-item>
+                    }
+                  </sds-select-content>
+                </div>
+              </div>
+            </div>
+
+            <label class="field" sdsField for="agent-description">
+              <span>Description</span>
+              <textarea sdsTextarea id="agent-description" formControlName="description" rows="4" placeholder="Enter instructions and variables"></textarea>
+            </label>
+          </section>
+
+          <section class="form-section trigger-section" sdsFormSection data-divider="none" aria-label="Agent trigger options">
+            <header sdsSectionHeader>
+              <h3>Agent Trigger Options</h3>
+              <p>Choose where this agent can be selected or invoked.</p>
+            </header>
+
+            <div class="field" sdsField>
+              <span>Select Trigger Options <strong>*</strong></span>
+              <div class="trigger-select" (click)="$event.stopPropagation()">
+                <div
+                  class="trigger-select-control"
+                  role="button"
+                  tabindex="0"
+                  [class.is-open]="triggerDropdownOpen()"
+                  aria-label="Select trigger options"
+                  [attr.aria-expanded]="triggerDropdownOpen()"
+                  (click)="toggleTriggerDropdown($event)"
+                  (keydown.enter)="toggleTriggerDropdown($event)"
+                >
+                  <div class="selected-trigger-tags">
+                    @for (trigger of selectedTriggers(); track trackByValue($index, trigger)) {
+                      <span class="trigger-tag">
+                        {{ trigger }}
+                        <button type="button" aria-label="Remove trigger" (click)="removeTrigger(trigger, $event)">
+                          <app-sds-icon name="x" [size]="10"></app-sds-icon>
+                        </button>
+                      </span>
+                    } @empty {
+                      <span class="trigger-placeholder">Select options</span>
+                    }
+                  </div>
+                  <app-sds-icon name="chevron-down" [size]="16"></app-sds-icon>
+                </div>
+
+                @if (triggerDropdownOpen()) {
+                  <div class="trigger-options-list" role="listbox" aria-label="Trigger options">
+                    @for (trigger of triggerOptions; track trackByValue($index, trigger)) {
+                      <button
+                        type="button"
+                        role="option"
+                        [attr.aria-selected]="selectedTriggers().includes(trigger)"
+                        [class.is-selected]="selectedTriggers().includes(trigger)"
+                        (click)="selectTrigger(trigger, $event)"
+                      >
+                        <span>{{ trigger }}</span>
+                        @if (selectedTriggers().includes(trigger)) {
+                          <app-sds-icon name="circle-check" [size]="14"></app-sds-icon>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section" sdsFormSection aria-label="Agent instructions">
+            <header sdsSectionHeader>
+              <h3>Agent Instructions</h3>
+              <p>Define how the agent should behave, what it should help with, and what sources it should use.</p>
+            </header>
+
+            <label class="field" sdsField for="agent-instructions">
+              <span>Write your instructions</span>
+              <textarea sdsTextarea id="agent-instructions" formControlName="agentInstructions" rows="5"></textarea>
+            </label>
+            <p class="helper-text">Placeholders are filled from HR data for the user running the agent.</p>
+          </section>
+        </article>
+
+        <article id="model" class="config-card" sdsCard>
+          <header class="card-title-row" sdsCardHeader>
+            <h2 sdsCardTitle>Model Configuration</h2>
+          </header>
+
+          <section class="form-section" sdsFormSection aria-label="LLM provider and model">
+            <header sdsSectionHeader>
+              <h3>LLM Provider & Model</h3>
+              <p>Choose the AI provider and model that powers this agent.</p>
+            </header>
+
+            <div class="field-grid two-columns" sdsFieldGrid data-columns="2">
+              <div class="field" sdsField>
+                <span>Provider <strong>*</strong></span>
+                <div class="sds-form-select" sdsSelect [value]="agentForm.controls.provider.value" (valueChange)="onProviderChange($any($event))">
+                  <sds-select-trigger>
+                    <span class="select-display-label">{{ agentForm.controls.provider.value }}</span>
+                  </sds-select-trigger>
+
+                  <sds-select-content *sdsSelectPortal>
+                    @for (provider of providerOptions; track trackByValue($index, provider)) {
+                      <sds-select-item [value]="provider">{{ provider }}</sds-select-item>
+                    }
+                  </sds-select-content>
+                </div>
+              </div>
+
+              <div class="field" sdsField>
+                <span>Model <strong>*</strong></span>
+                <div class="sds-form-select" sdsSelect [value]="agentForm.controls.model.value" (valueChange)="onModelChange($any($event))">
+                  <sds-select-trigger>
+                    <span class="select-display-label">{{ agentForm.controls.model.value }}</span>
+                  </sds-select-trigger>
+
+                  <sds-select-content *sdsSelectPortal>
+                    @for (model of currentModelOptions; track trackByValue($index, model)) {
+                      <sds-select-item [value]="model">{{ model }}</sds-select-item>
+                    }
+                  </sds-select-content>
+                </div>
+              </div>
+            </div>
+
+            <div class="field" sdsField>
+              <span>Key Profile</span>
+              <div class="sds-form-select" sdsSelect [value]="agentForm.controls.keyProfile.value" (valueChange)="onKeyProfileChange($any($event))">
+                <sds-select-trigger>
+                  <span class="select-display-label">{{ agentForm.controls.keyProfile.value }}</span>
+                </sds-select-trigger>
+
+                <sds-select-content *sdsSelectPortal>
+                  @for (profile of keyProfiles; track trackByValue($index, profile)) {
+                    <sds-select-item [value]="profile">{{ profile }}</sds-select-item>
+                  }
+                </sds-select-content>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section" sdsFormSection aria-label="Response quality and usage">
+            <header sdsSectionHeader>
+              <h3>Response Quality & Usage</h3>
+              <p>Set response quality, length, and token usage.</p>
+            </header>
+
+            <label class="field range-field" sdsField for="temperature-input">
+              <span>Temperature</span>
+              <div class="range-row">
+                <input
+                  id="temperature-input"
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  [value]="agentForm.controls.temperature.value"
+                  (input)="onTemperatureInput($any($event.target).value)"
+                />
+                <output>{{ agentForm.controls.temperature.value }}</output>
+              </div>
+              <small>0-2: Precise (0) | Balanced (1) | Creative (2) | Selected Range: {{ temperatureLabel }}</small>
+            </label>
+
+            <div class="field-grid two-columns" sdsFieldGrid data-columns="2">
+              <label class="field" sdsField for="max-tokens">
+                <span>Max output tokens</span>
+                <input sdsInput id="max-tokens" type="number" min="512" max="12000" formControlName="maxOutputTokens" />
+              </label>
+
+              <div class="field" sdsField>
+                <span>KB retrieval top-K <strong>*</strong></span>
+                <div class="sds-form-select" sdsSelect [value]="agentForm.controls.kbRetrievalTopK.value" (valueChange)="onKbTopKChange($any($event))">
+                  <sds-select-trigger>
+                    <span class="select-display-label">{{ agentForm.controls.kbRetrievalTopK.value }}</span>
+                  </sds-select-trigger>
+
+                  <sds-select-content *sdsSelectPortal>
+                    @for (option of kbTopKOptions; track trackByValue($index, option)) {
+                      <sds-select-item [value]="option">{{ option }}</sds-select-item>
+                    }
+                  </sds-select-content>
+                </div>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <strong>Enable extended reasoning</strong>
+                <span>Runs an internal planning step for complex tasks.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" aria-label="Enable extended reasoning" formControlName="extendedReasoning" />
+                <span></span>
+              </label>
+            </div>
+          </section>
+        </article>
+
+        <article id="tools-and-data" class="config-card" sdsCard>
+          <header class="card-title-row" sdsCardHeader>
+            <h2 sdsCardTitle>Tools & Data</h2>
+          </header>
+
+          <section class="form-section" sdsFormSection aria-label="Tools">
+            <header sdsSectionHeader>
+              <h3>Tools</h3>
+              <p>Add external tools the agent can call during a conversation.</p>
+            </header>
+            @if (selectedTools().length) {
+              <div class="selected-resource-stack">
+                @for (tool of selectedTools(); track trackItem($index, tool)) {
+                  <div class="selected-resource-block">
+                    <app-sds-selected-resource-card [item]="tool"></app-sds-selected-resource-card>
+                    <div class="selected-resource-actions">
+                      <button type="button" sdsIconButton variant="default" size="sm" [attr.aria-label]="'Remove ' + tool.title" (click)="removeSelectedResource('tools', tool.id)">
+                        <app-sds-icon name="trash" [size]="16"></app-sds-icon>
+                      </button>
+                      @if ($last) {
+                        <button type="button" sdsIconButton variant="default" size="sm" aria-label="Add Tool" (click)="openCatalog('tools')">
+                          <app-sds-icon name="add" [size]="16"></app-sds-icon>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-box">
+                <img class="empty-illustration" src="assets/icons/sds/custom/tool-empty.png" alt="" />
+                <span>Add tools to let this agent fetch data, trigger actions, or connect with other systems</span>
+                <button type="button" sdsButton variant="secondary" size="sm" (click)="openCatalog('tools')">
+                  <app-sds-icon name="add" [size]="14"></app-sds-icon>
+                  Add Tool
+                </button>
+              </div>
+            }
+          </section>
+
+          <section class="form-section" sdsFormSection aria-label="Knowledge Bases">
+            <header sdsSectionHeader>
+              <h3>Knowledge Bases</h3>
+              <p>Select sources the agent can search before answering.</p>
+            </header>
+            @if (selectedKnowledgeBases().length) {
+              <div class="selected-resource-stack">
+                @for (knowledgeBase of selectedKnowledgeBases(); track trackItem($index, knowledgeBase)) {
+                  <div class="selected-resource-block">
+                    <app-sds-selected-resource-card [item]="knowledgeBase"></app-sds-selected-resource-card>
+                    <div class="selected-resource-actions">
+                      <button type="button" sdsIconButton variant="default" size="sm" [attr.aria-label]="'Remove ' + knowledgeBase.title" (click)="removeSelectedResource('knowledgeBases', knowledgeBase.id)">
+                        <app-sds-icon name="trash" [size]="16"></app-sds-icon>
+                      </button>
+                      @if ($last) {
+                        <button type="button" sdsIconButton variant="default" size="sm" aria-label="Add Knowledge Base" (click)="openCatalog('knowledgeBases')">
+                          <app-sds-icon name="add" [size]="16"></app-sds-icon>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-box">
+                <img class="empty-illustration" src="assets/icons/sds/custom/kb-empty.png" alt="" />
+                <span>Add knowledge bases so the agent can answer using approved content.</span>
+                <button type="button" sdsButton variant="secondary" size="sm" (click)="openCatalog('knowledgeBases')">
+                  <app-sds-icon name="add" [size]="14"></app-sds-icon>
+                  Add Knowledge Base
+                </button>
+              </div>
+            }
+          </section>
+
+          <section class="form-section" sdsFormSection aria-label="Built-in capabilities">
+            <header sdsSectionHeader>
+              <h3>Built-in Capabilities</h3>
+              <p>Activate ready-to-use features for this agent.</p>
+            </header>
+
+            <div class="capability-list">
+              @for (capability of capabilities(); track trackCapability($index, capability)) {
+                <article class="capability-item">
+                  <div class="capability-content">
+                    <div class="capability-heading">
+                      <h4>{{ capability.title }}</h4>
+                      <div class="chip-line">
+                        @for (chip of capability.chips; track trackByValue($index, chip)) {
+                          <span>{{ chip }}</span>
+                        }
+                      </div>
+                    </div>
+                    <p>{{ capability.description }}</p>
+                  </div>
+                  <label class="switch">
+                    <input
+                      type="checkbox"
+                      [checked]="capability.enabled"
+                      [attr.aria-label]="capability.title"
+                      (change)="toggleCapability(capability.id)"
+                    />
+                    <span></span>
+                  </label>
+                </article>
+              }
+            </div>
+          </section>
+        </article>
+
+        <article id="skills" class="config-card" sdsCard>
+          <header class="card-title-row" sdsCardHeader>
+            <h2 sdsCardTitle>Skills</h2>
+          </header>
+
+          <section class="form-section" sdsFormSection aria-label="Skills">
+            <header sdsSectionHeader>
+              <p>Add reusable skills to extend what this agent can do.</p>
+            </header>
+            @if (selectedSkills().length) {
+              <div class="selected-resource-stack">
+                @for (skill of selectedSkills(); track trackItem($index, skill)) {
+                  <div class="selected-resource-block">
+                    <app-sds-selected-resource-card [item]="skill"></app-sds-selected-resource-card>
+                    <div class="selected-resource-actions">
+                      <button type="button" sdsIconButton variant="default" size="sm" [attr.aria-label]="'Remove ' + skill.title" (click)="removeSelectedResource('skills', skill.id)">
+                        <app-sds-icon name="trash" [size]="16"></app-sds-icon>
+                      </button>
+                      @if ($last) {
+                        <button type="button" sdsIconButton variant="default" size="sm" aria-label="Add Skill" (click)="openCatalog('skills')">
+                          <app-sds-icon name="add" [size]="16"></app-sds-icon>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-box">
+                <img class="empty-illustration" src="assets/icons/sds/custom/skills-empty.png" alt="" />
+                <span>Add skills from the catalog to give this agent more capabilities</span>
+                <button type="button" sdsButton variant="secondary" size="sm" (click)="openCatalog('skills')">
+                  <app-sds-icon name="add" [size]="14"></app-sds-icon>
+                  Add Skill
+                </button>
+              </div>
+            }
+          </section>
+        </article>
+      </form>
+    </section>
+
+  </main>
+
+  @if (activeCatalog(); as catalog) {
+    <div class="dialog-backdrop" role="presentation" (click)="closeCatalog()">
+      <app-sds-catalog-picker-dialog
+        [kind]="catalog"
+        [title]="catalogTitle(catalog)"
+        [items]="catalogItems(catalog)"
+        [categories]="catalogCategories(catalog)"
+        [selectedIds]="catalogSelectedIds(catalog)"
+        [manageLabel]="catalogManageLabel(catalog)"
+        [confirmLabel]="catalogConfirmLabel(catalog)"
+        [showCountInTitle]="false"
+        (closeDialog)="closeCatalog()"
+        (selectionDone)="commitCatalogSelection($event)"
+        (click)="$event.stopPropagation()"
+      ></app-sds-catalog-picker-dialog>
+    </div>
+  }
+
+  <p class="save-status" aria-live="polite">{{ lastSavedLabel() }}</p>
+</div>

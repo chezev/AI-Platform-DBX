@@ -1,0 +1,196 @@
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.copilot-panel {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background:
+    linear-gradient(165deg, var(--sds-ai-glow-subtle) 0%, transparent 28%),
+    var(--sds-bg-neutralWhite-default);
+  box-shadow: var(--sds-shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.copilot-panel header,
+.copilot-panel footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sds-gap-8);
+}
+
+.copilot-panel header {
+  min-height: 52px;
+  padding: var(--sds-padding-16) var(--sds-padding-20) 0;
+}
+
+.copilot-panel header div {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-8);
+}
+
+.copilot-panel strong {
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-title-xxs-medium-font-size);
+  font-weight: var(--sds-title-xxs-medium-font-weight);
+  line-height: var(--sds-title-xxs-medium-line-height);
+}
+
+.copilot-panel header button {
+  min-width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--sds-border-radius-4);
+  background: transparent;
+  color: var(--sds-text-neutral-title);
+}
+
+.copilot-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: var(--sds-padding-20);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-24);
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.copilot-body:hover {
+  scrollbar-width: thin;
+}
+
+.copilot-body::-webkit-scrollbar {
+  width: 0;
+}
+
+.copilot-body:hover::-webkit-scrollbar {
+  width: 3px;
+}
+
+.copilot-body::-webkit-scrollbar-thumb {
+  background: var(--sds-bg-primary-readOnly);
+  border-radius: var(--sds-border-radius-full);
+}
+
+.copilot-intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-24);
+}
+
+.copilot-intro p,
+.copilot-help-line span,
+.copilot-prompt-card,
+.copilot-thinking span {
+  margin: 0;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-m-book-font-size);
+  font-weight: var(--sds-body-m-book-font-weight);
+  line-height: var(--sds-body-m-book-line-height);
+}
+
+.copilot-help-line {
+  padding-left: var(--sds-padding-16);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sds-gap-8);
+  align-items: start;
+}
+
+.copilot-prompt-card {
+  margin-inline: var(--sds-padding-16);
+  padding: var(--sds-padding-16);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-ai-glow-subtle);
+}
+
+.copilot-thinking {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-16);
+}
+
+.copilot-thinking strong {
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-xs-medium-font-size);
+  font-weight: var(--sds-title-xs-medium-font-weight);
+  line-height: var(--sds-title-xs-medium-line-height);
+}
+
+.copilot-panel footer {
+  min-height: 52px;
+  margin: 0 var(--sds-padding-20) var(--sds-padding-16);
+  padding: var(--sds-padding-4) var(--sds-padding-4) var(--sds-padding-4) var(--sds-padding-12);
+  border: 1px solid var(--sds-border-primary-default);
+  border-radius: var(--sds-border-radius-24);
+  background: var(--sds-bg-neutralGrey-light1);
+}
+
+.copilot-panel footer input {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: none;
+  background: transparent;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-body-m-book-font-size);
+  font-weight: var(--sds-body-m-book-font-weight);
+  line-height: var(--sds-body-m-book-line-height);
+}
+
+.copilot-panel footer input:focus {
+  outline: none;
+}
+
+.attachment-button,
+.send-button {
+  min-width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--sds-border-radius-full);
+  background: transparent;
+  color: var(--sds-text-neutral-label);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-button {
+  background: var(--sds-bg-primary-active);
+  color: var(--sds-text-neutral-negative);
+}
+
+.send-button app-sds-icon {
+  --sds-icon-filter: brightness(0) saturate(100%) invert(100%);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 1px solid var(--sds-border-neutralBlue-active);
+  outline-offset: 1px;
+}

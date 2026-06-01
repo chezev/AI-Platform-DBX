@@ -1,0 +1,18 @@
+<main class="home-shell" aria-label="AI Native Product Home">
+  <header class="home-header">
+    <p class="home-eyebrow">AI Native Product Suite</p>
+    <h1>Platform modules</h1>
+    <p class="home-summary">
+      Use this home page to navigate across all product modules.
+    </p>
+  </header>
+
+  <section class="home-grid" aria-label="Product modules">
+    <article class="module-card" *ngFor="let area of areas; trackBy: trackByPath">
+      <div class="module-meta">{{ area.stack }}</div>
+      <h2>{{ area.title }}</h2>
+      <p>{{ area.description }}</p>
+      <a [routerLink]="area.path" class="module-link">Open {{ area.title }}</a>
+    </article>
+  </section>
+</main>

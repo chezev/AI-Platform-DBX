@@ -1,0 +1,222 @@
+<div class="page-shell">
+  <app-sds-topbar
+    searchId="global-search-input"
+    [searchValue]="globalSearchValue()"
+    (searchValueChange)="onGlobalSearchInput($event)"
+  ></app-sds-topbar>
+
+  <nav class="product-nav" aria-label="Product navigation">
+    <button type="button" class="product-nav-leading" aria-label="Agent hub">
+      <app-sds-icon name="agent-hub" [size]="20"></app-sds-icon>
+    </button>
+
+    <button
+      *ngFor="let menu of productMenus; let menuIndex = index"
+      type="button"
+      class="product-nav-item"
+      [class.is-active]="menuIndex === 0"
+    >
+      {{ menu }}
+    </button>
+  </nav>
+
+  <main
+    class="workspace"
+    brnTabs
+    [brnTabs]="activeModuleTab()"
+    (tabActivated)="onTabChange($event)"
+    aria-label="Agent list workspace"
+  >
+    <div class="workspace-heading">
+      <div class="module-tabs" brnTabsList aria-label="Agent modules">
+        <button brnTabsTrigger="agents" class="module-tab-button">
+          <app-sds-icon name="user-cog" [size]="14"></app-sds-icon>
+          Agents <span class="count-pill">{{ agentTotalCount }}</span>
+        </button>
+        <button brnTabsTrigger="projects" class="module-tab-button">
+          <app-sds-icon name="home" [size]="14"></app-sds-icon>
+          Projects <span class="count-pill muted">99+</span>
+        </button>
+      </div>
+
+      <a routerLink="/agent-creation/startup" sdsButton variant="primary">
+        <app-sds-icon name="add" [size]="16"></app-sds-icon>
+        Create Agent
+      </a>
+    </div>
+
+    <section class="tab-panel" brnTabsContent="agents">
+      <div class="controls-row">
+        <label class="page-search" sdsSearchField for="agent-search-input">
+          <input
+            id="agent-search-input"
+            type="search"
+            placeholder="Search here"
+            [value]="agentSearchValue()"
+            (input)="onAgentSearchInput($any($event.target).value)"
+          />
+          <app-sds-icon name="search" [size]="16"></app-sds-icon>
+        </label>
+
+        <div class="controls-right">
+          <div class="state-filter" sdsSelect [value]="stateFilter()" (valueChange)="onStateFilterChange($event)">
+            <sds-select-trigger>
+              <span class="select-display-label">{{ currentStateLabel() }}</span>
+            </sds-select-trigger>
+
+            <sds-select-content *sdsSelectPortal>
+              @for (option of stateOptions; track trackOption($index, option)) {
+                <sds-select-item [value]="option.value">{{ option.label }}</sds-select-item>
+              }
+            </sds-select-content>
+          </div>
+
+          <button type="button" sdsIconButton aria-label="Filter">
+            <app-sds-icon name="funnel" [size]="18"></app-sds-icon>
+          </button>
+
+          <div class="view-toggle" aria-label="View mode">
+            <button
+              type="button"
+              class="view-mode-btn"
+              [class.is-active]="viewMode() === 'grid'"
+              (click)="setViewMode('grid')"
+              aria-label="Grid view"
+            >
+              <app-sds-icon name="table" [size]="16"></app-sds-icon>
+            </button>
+            <button
+              type="button"
+              class="view-mode-btn"
+              [class.is-active]="viewMode() === 'list'"
+              (click)="setViewMode('list')"
+              aria-label="List view"
+            >
+              <app-sds-icon name="hamburger-menu" [size]="16"></app-sds-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      @if (viewMode() === 'grid') {
+        <div class="agent-grid">
+          @for (agent of agents$ | async; track trackAgent($index, agent)) {
+            <article class="agent-card" [class.is-highlighted]="highlightedAgentId() === agent.id">
+              <div class="card-menu-anchor">
+                <button
+                  type="button"
+                  class="card-menu-button"
+                  sdsIconButton
+                  variant="ghost"
+                  size="xs"
+                  aria-label="More actions"
+                  [attr.aria-expanded]="isMenuOpen(agent.id)"
+                  (click)="toggleMenu(agent.id, $event)"
+                >
+                  <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                </button>
+
+                @if (isMenuOpen(agent.id)) {
+                  <div class="card-action-menu" role="menu" aria-label="Agent actions">
+                    @for (action of getAgentActions(agent); track action) {
+                      <button type="button" class="card-action-item" role="menuitem" (click)="onAgentAction(agent, action, $event)">
+                        {{ action }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+
+              <h3>{{ agent.name }}</h3>
+              <p>{{ agent.description }}</p>
+
+              <footer class="agent-meta">
+                <span class="agent-category">
+                  <span class="category-dot" [attr.data-accent]="agent.accent"></span>
+                  {{ agent.category }}
+                </span>
+
+                <span class="agent-status" [attr.data-status]="getAgentStatus(agent).toLowerCase()">
+                  <span class="status-dot"></span>
+                  {{ getAgentStatus(agent) }}
+                  <span class="meta-divider">|</span>
+                  {{ agent.updatedLabel }}
+                </span>
+              </footer>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="agent-list-table-wrap">
+          <table class="agent-list-table" aria-label="Agents list view">
+            <thead>
+              <tr>
+                <th>Agent Name</th>
+                <th>Status</th>
+                <th>Projects</th>
+                <th>Created On</th>
+                <th>Updated On</th>
+                <th>Updated By</th>
+                <th class="actions-head">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (agent of agents$ | async; track trackAgent($index, agent)) {
+                <tr [class.is-highlighted]="highlightedAgentId() === agent.id">
+                  <td class="name-cell">{{ agent.name }}</td>
+                  <td>
+                    <span class="agent-status-pill" [attr.data-status]="getAgentStatus(agent).toLowerCase()">
+                      {{ getAgentStatus(agent) }}
+                    </span>
+                  </td>
+                  <td>{{ getAgentProject(agent) }}</td>
+                  <td>{{ getAgentCreatedOn(agent) }}</td>
+                  <td>{{ getAgentUpdatedOn(agent) }}</td>
+                  <td>{{ getAgentUpdatedBy(agent) }}</td>
+                  <td class="actions-cell">
+                    <div class="row-menu-anchor">
+                      <button
+                        type="button"
+                        class="card-menu-button"
+                        sdsIconButton
+                        variant="ghost"
+                        size="xs"
+                        aria-label="More actions"
+                        [attr.aria-expanded]="isMenuOpen(agent.id)"
+                        (click)="toggleMenu(agent.id, $event)"
+                      >
+                        <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                      </button>
+
+                      @if (isMenuOpen(agent.id)) {
+                        <div class="card-action-menu row-action-menu" role="menu" aria-label="Agent actions">
+                          @for (action of getAgentActions(agent); track action) {
+                            <button
+                              type="button"
+                              class="card-action-item"
+                              role="menuitem"
+                              (click)="onAgentAction(agent, action, $event)"
+                            >
+                              {{ action }}
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <section class="tab-panel projects-panel" brnTabsContent="projects">
+      <article class="projects-placeholder">
+        <h2>Projects view is ready</h2>
+        <p>Share the Projects Figma node when you are ready and we will build it next.</p>
+      </article>
+    </section>
+  </main>
+</div>

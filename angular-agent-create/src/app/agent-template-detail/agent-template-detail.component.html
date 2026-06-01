@@ -1,0 +1,150 @@
+<div class="template-detail-shell">
+  <app-sds-topbar searchId="template-detail-global-search"></app-sds-topbar>
+
+  <nav class="detail-subheader" aria-label="Template breadcrumb">
+    <a routerLink="/agent-creation/startup">Create Agent</a>
+    <span>/</span>
+    <strong>Template</strong>
+  </nav>
+
+  <main class="detail-workspace">
+    <section class="summary-card" sdsCard aria-label="Template summary">
+      <div class="summary-content">
+        <h1>{{ displayName }}</h1>
+        <div class="summary-meta">
+          <span>
+            <app-sds-icon name="gear" [size]="12"></app-sds-icon>
+            GPT 5.4
+          </span>
+          <span>
+            <span class="status-dot"></span>
+            Active
+          </span>
+          <span>5 days ago</span>
+          <span>
+            <span class="category-dot" [attr.data-accent]="template.accent"></span>
+            {{ template.category }}
+          </span>
+        </div>
+      </div>
+
+      <a sdsButton variant="primary" size="sm" routerLink="/agent-creation/create" [queryParams]="ctaQueryParams">
+        {{ ctaLabel }}
+      </a>
+    </section>
+
+    <nav class="detail-tabs" aria-label="Template sections">
+      <button type="button" class="detail-tab is-active">Details</button>
+      <button type="button" class="detail-tab">Logs</button>
+      <button type="button" class="detail-tab">Versions</button>
+    </nav>
+
+    <section class="detail-card overview-card" sdsCard aria-label="Overview">
+      <h2>Overview</h2>
+
+      <div class="field-grid two-columns">
+        <div class="field">
+          <span>Name</span>
+          <strong>{{ displayName }}</strong>
+        </div>
+        <div class="field">
+          <span>Project</span>
+          <strong>{{ projectName }}</strong>
+        </div>
+      </div>
+
+      <div class="field full-width">
+        <span>Description</span>
+        <strong>{{ template.description }}</strong>
+      </div>
+
+      <div class="field full-width prompt-field">
+        <span>System Prompt</span>
+        <strong>{{ systemPrompt }}</strong>
+        <button type="button">View More</button>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="field full-width">
+        <span>Available as Sub-Agent</span>
+        <strong>Enabled</strong>
+      </div>
+
+      <div class="field full-width prompt-field">
+        <span>Description for parent agents</span>
+        <strong>{{ systemPrompt }}</strong>
+        <button type="button">View More</button>
+      </div>
+    </section>
+
+    <section class="detail-card model-card" sdsCard aria-label="Model">
+      <h2>Model</h2>
+      <div class="field-grid model-grid">
+        @for (field of modelFields; track field.label) {
+          <div class="field">
+            <span>{{ field.label }}</span>
+            <strong>{{ field.value }}</strong>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="detail-card resource-card" sdsCard aria-label="Template resources">
+      <div class="resource-section">
+        <h2>Tools From Registry</h2>
+        <div class="resource-list">
+          @for (tool of tools; track tool.tag) {
+            <article class="resource-item" sdsResourceCard>
+              <div>
+                <h3>{{ tool.title }}</h3>
+                <p>{{ tool.description }}</p>
+              </div>
+              <span class="resource-badge">{{ tool.tag }}</span>
+            </article>
+          }
+        </div>
+      </div>
+
+      <div class="resource-section">
+        <h2>Knowledge Bases</h2>
+        <div class="resource-list">
+          @for (knowledgeBase of knowledgeBases; track knowledgeBase.title + knowledgeBase.tag + $index) {
+            <article class="resource-item" sdsResourceCard>
+              <div>
+                <h3>{{ knowledgeBase.title }}</h3>
+                <p>{{ knowledgeBase.description }}</p>
+              </div>
+              <span class="resource-badge">{{ knowledgeBase.tag }}</span>
+            </article>
+          }
+        </div>
+      </div>
+
+      <div class="resource-section">
+        <h2>Built-in Capabilities</h2>
+        <div class="capability-grid">
+          @for (capability of capabilities; track capability.label) {
+            <div class="field">
+              <span>{{ capability.label }}</span>
+              <strong>{{ capability.value }}</strong>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="resource-section">
+        <h2>Skills</h2>
+        <article class="resource-item skill-item" sdsResourceCard>
+          <div>
+            <h3>Assign Key People</h3>
+            <p>
+              Enables assigning or removing key people (manager, buddy, recruiter, onboarding SPOC) for onboarding
+              candidates. Use when the user wants to
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</div>

@@ -1,0 +1,172 @@
+<div class="create-shell">
+  <app-sds-topbar searchId="startup-global-search"></app-sds-topbar>
+
+  <nav class="create-subheader" aria-label="Create agent navigation">
+    <a routerLink="/agent-creation" class="back-link" aria-label="Back to agents">
+      <app-sds-icon name="arrow-left" [size]="12"></app-sds-icon>
+      <span>Create Agent</span>
+    </a>
+  </nav>
+
+  <main class="create-workspace" aria-label="Create agent startup">
+    <section class="template-panel" aria-label="Prebuilt templates">
+      <div class="template-panel-heading">
+        <h1>Explore Prebuilt Templates ({{ filteredTemplates().length }})</h1>
+        <div class="template-actions">
+          <label class="template-search" sdsSearchField for="template-search-input">
+            <input
+              id="template-search-input"
+              type="search"
+              placeholder="Search templates"
+              [value]="templateSearch()"
+              (input)="onTemplateSearchInput($any($event.target).value)"
+            />
+            <app-sds-icon name="search" [size]="16"></app-sds-icon>
+          </label>
+
+          <div
+            class="template-filter"
+            sdsSelect
+            [value]="selectedTemplateCategory()"
+            (valueChange)="onTemplateCategoryChange($any($event))"
+          >
+            <sds-select-trigger>
+              <span class="select-display-label">{{ selectedTemplateCategory() }}</span>
+            </sds-select-trigger>
+
+            <sds-select-content *sdsSelectPortal>
+              <sds-select-item value="All">All</sds-select-item>
+              @for (category of templateCategories(); track category) {
+                <sds-select-item [value]="category">{{ category }}</sds-select-item>
+              }
+            </sds-select-content>
+          </div>
+        </div>
+      </div>
+
+      <div class="template-grid">
+        @for (template of filteredTemplates(); track trackTemplate($index, template)) {
+          <a class="template-card" sdsCard [routerLink]="['/agent-creation/template', template.id]">
+            <div class="template-title-row">
+              <h2>{{ template.name }}</h2>
+              <span class="template-accent" [attr.data-accent]="template.accent"></span>
+            </div>
+            <p>{{ template.description }}</p>
+            <footer>
+              <span>
+                <app-sds-icon name="gear" [size]="12"></app-sds-icon>
+                {{ template.category }}
+              </span>
+              <span>
+                <app-sds-icon name="calendar" [size]="12"></app-sds-icon>
+                {{ template.age }}
+              </span>
+            </footer>
+          </a>
+        } @empty {
+          <div class="template-empty-state" role="status">No templates found</div>
+        }
+      </div>
+    </section>
+
+    <aside class="builder-panel" aria-label="Create agent choices">
+      <section class="ai-start">
+        <div class="ai-icon">
+          <img src="assets/icons/sds/agentic-aI-icon-new.png" alt="" />
+        </div>
+        <h2>Start Building with AI</h2>
+        <p>Co-Pilot will help you to build a robust agent.</p>
+
+        <form class="ai-builder-form" [class.is-ready]="aiBuildReady()" (submit)="submitAiBuild($event)">
+          <label class="ai-prompt-label" for="ai-builder-prompt">Build with AI</label>
+          <div class="ai-project-card">
+            <textarea
+              id="ai-builder-prompt"
+              class="ai-prompt-input"
+              rows="2"
+              placeholder="Create a new-hire journey copilot"
+              [value]="aiPrompt()"
+              (input)="onAiPromptInput($any($event.target).value)"
+            ></textarea>
+
+            <div class="project-row" sdsSelect [value]="selectedProject()" (valueChange)="onProjectChange($any($event))">
+              <sds-select-trigger [showChevron]="false">
+                <span class="project-select-label" [class.is-placeholder]="!selectedProject()">
+                  {{ selectedProject() || 'Select Project' }}
+                </span>
+                <app-sds-icon name="chevron-down" [size]="16"></app-sds-icon>
+              </sds-select-trigger>
+
+              <sds-select-content *sdsSelectPortal>
+                @for (project of projects; track project) {
+                  <sds-select-item [value]="project">{{ project }}</sds-select-item>
+                }
+              </sds-select-content>
+            </div>
+
+            <button type="submit" class="project-arrow" aria-label="Build agent with AI">
+              <app-sds-icon name="arrow-right" [size]="16"></app-sds-icon>
+            </button>
+          </div>
+
+          @if (showAiSuggestions()) {
+            <div class="ai-suggestions-panel" role="listbox" aria-label="AI build suggestions">
+              @if (aiSuggestions().existing.length) {
+                <section>
+                  <h3>Already Existing Agents</h3>
+                  <div class="suggestion-grid">
+                    @for (suggestion of aiSuggestions().existing; track trackSuggestion($index, suggestion); let first = $first) {
+                      <a
+                        class="suggestion-pill"
+                        [routerLink]="['/agent-creation/template', suggestion.id]"
+                        [queryParams]="{ source: suggestion.type, name: suggestion.label }"
+                      >
+                        <app-sds-icon [name]="suggestion.icon" [size]="10"></app-sds-icon>
+                        <span>{{ suggestion.label }}</span>
+                        @if (first) {
+                          <app-sds-icon name="info" [size]="10"></app-sds-icon>
+                        }
+                      </a>
+                    }
+                  </div>
+                </section>
+              }
+
+              @if (aiSuggestions().templates.length) {
+                <section>
+                  <h3>SUGGESTED PRE-BUILD Templates</h3>
+                  <div class="suggestion-grid">
+                    @for (suggestion of aiSuggestions().templates; track trackSuggestion($index, suggestion)) {
+                      <a
+                        class="suggestion-pill"
+                        [routerLink]="['/agent-creation/template', suggestion.id]"
+                        [queryParams]="{ source: suggestion.type, name: suggestion.label }"
+                      >
+                        <app-sds-icon [name]="suggestion.icon" [size]="10"></app-sds-icon>
+                        <span>{{ suggestion.label }}</span>
+                      </a>
+                    }
+                  </div>
+                </section>
+              }
+            </div>
+          }
+        </form>
+
+        <p class="required-note">Project selection is mandatory <span>*</span></p>
+      </section>
+
+      <div class="or-divider">
+        <span></span>
+        <strong>OR</strong>
+        <span></span>
+      </div>
+
+      <section class="scratch-start">
+        <h2>Build from Scratch</h2>
+        <p>You can create your own Agent Manually</p>
+        <a routerLink="/agent-creation/create" sdsButton variant="secondary">Create Agent</a>
+      </section>
+    </aside>
+  </main>
+</div>

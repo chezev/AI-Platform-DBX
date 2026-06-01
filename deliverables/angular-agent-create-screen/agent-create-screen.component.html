@@ -1,0 +1,212 @@
+<div class="screen-shell">
+  <aside class="left-rail" aria-label="Primary navigation">
+    <button type="button" class="rail-app-launcher" aria-label="Open apps">
+      <span class="launcher-grid" aria-hidden="true"></span>
+    </button>
+
+    <nav class="rail-nav" aria-label="Side navigation">
+      <button
+        *ngFor="let item of sideNavItems; trackBy: trackByLabel"
+        type="button"
+        class="rail-nav-item"
+        [class.is-active]="item.isActive"
+        [attr.aria-label]="item.label"
+      >
+        <span class="rail-nav-dot" aria-hidden="true"></span>
+      </button>
+    </nav>
+
+    <button type="button" class="rail-footer-item" aria-label="Support">
+      <span class="rail-nav-dot" aria-hidden="true"></span>
+    </button>
+  </aside>
+
+  <div class="content-shell">
+    <header class="global-header">
+      <div class="global-header-top">
+        <label class="global-search" for="global-search-input">
+          <span class="visually-hidden">Search for people and settings</span>
+          <input
+            id="global-search-input"
+            type="search"
+            class="sds-search-input"
+            placeholder="Enter people or settings"
+          />
+        </label>
+
+        <div class="header-actions" aria-label="Header actions">
+          <button type="button" class="icon-button" aria-label="Notifications"></button>
+          <button type="button" class="icon-button" aria-label="AI actions"></button>
+          <button type="button" class="avatar-button" aria-label="Profile">SM</button>
+        </div>
+      </div>
+
+      <nav class="product-nav" aria-label="Product navigation">
+        <button
+          *ngFor="let menu of globalMenus; trackBy: trackByValue"
+          type="button"
+          class="product-nav-item"
+          [class.is-active]="menu === 'Agent Hub'"
+        >
+          {{ menu }}
+        </button>
+      </nav>
+    </header>
+
+    <main class="page-surface">
+      <section class="page-header" aria-label="Agent creation header">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="#" class="breadcrumb-link">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <a href="#" class="breadcrumb-link">Agents</a>
+          <span class="breadcrumb-separator">/</span>
+          <a href="#" class="breadcrumb-link">New</a>
+          <span class="breadcrumb-separator">/</span>
+          <span class="breadcrumb-current">Manual</span>
+        </nav>
+
+        <div class="page-title-row">
+          <div class="title-block">
+            <h1>Untitled agent</h1>
+            <p>Draft · Not yet saved</p>
+          </div>
+
+          <div class="title-actions">
+            <button type="button" class="text-action">Cancel</button>
+            <button type="button" class="sds-btn-secondary">Save as draft</button>
+            <button type="button" class="sds-btn-primary">
+              <span class="btn-check" aria-hidden="true">✓</span>
+              Create agent
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <nav class="config-tabs" aria-label="Configuration tabs">
+        <button
+          *ngFor="let tab of configTabs; trackBy: trackByValue"
+          type="button"
+          class="config-tab"
+          [class.is-active]="tab === 'Overview'"
+        >
+          {{ tab }}
+        </button>
+      </nav>
+
+      <section class="workspace-grid" aria-label="Agent form layout">
+        <form class="workspace-main" [formGroup]="agentForm">
+          <article class="sds-card">
+            <div class="card-header">
+              <h2>Identity</h2>
+              <div class="template-loader">
+                <span>Load template:</span>
+                <button type="button" class="sds-btn-secondary compact">Enterprise Integration Doc Writer</button>
+              </div>
+            </div>
+
+            <div class="form-stack">
+              <div class="field-grid two-up">
+                <div class="field">
+                  <label for="agent-name" class="sds-label sds-label-required">Name</label>
+                  <input
+                    id="agent-name"
+                    type="text"
+                    class="sds-input sds-input-large"
+                    formControlName="name"
+                    placeholder="Enter agent name"
+                  />
+                </div>
+
+                <div class="field">
+                  <label for="agent-description" class="sds-label">Description</label>
+                  <input
+                    id="agent-description"
+                    type="text"
+                    class="sds-input sds-input-large"
+                    formControlName="description"
+                    placeholder="Enter agent description"
+                  />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="agent-project" class="sds-label sds-label-required">Project</label>
+                  <select id="agent-project" class="sds-select sds-input-large" formControlName="project">
+                    <option value="" selected>Select a project</option>
+                    <option value="hr">HR Operations</option>
+                    <option value="it">IT Support</option>
+                    <option value="finance">Finance Automation</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="sds-card">
+            <div class="trigger-title">AGENT TRIGGER OPTIONS <span class="required-marker">*</span></div>
+            <p class="trigger-help">Choose where this agent can be selected or invoked (at least one option is required).</p>
+
+            <div class="field-grid">
+              <div class="field">
+                <label for="trigger-channel" class="sds-label">Trigger channels</label>
+                <select id="trigger-channel" class="sds-select sds-input-large" formControlName="triggerChannels">
+                  <option value="Super Agent, Agent Node in Flows, External Webhook" selected>
+                    Super Agent, Agent Node in Flows, External Webhook
+                  </option>
+                  <option value="Super Agent">Super Agent</option>
+                  <option value="Agent Node in Flows">Agent Node in Flows</option>
+                  <option value="External Webhook">External Webhook</option>
+                </select>
+              </div>
+            </div>
+          </article>
+
+          <article class="sds-card">
+            <h2>System prompt</h2>
+
+            <div class="chip-row" aria-label="Context chips">
+              <button
+                *ngFor="let chip of contextChips; trackBy: trackByValue"
+                type="button"
+                class="context-chip"
+              >
+                {{ chip }}
+              </button>
+            </div>
+
+            <div class="field">
+              <label for="system-prompt" class="sds-label">System prompt</label>
+              <textarea
+                id="system-prompt"
+                class="sds-textarea"
+                formControlName="systemPrompt"
+                placeholder="Enter system prompt"
+              ></textarea>
+            </div>
+          </article>
+        </form>
+
+        <aside class="workspace-side" aria-label="Quick guidance panel">
+          <article class="sds-card quick-card">
+            <h2>Quick start</h2>
+            <ul class="quick-list">
+              <li>Name the agent and define a clear system prompt.</li>
+              <li>Pick a model and configure temperature.</li>
+              <li>Connect tools or a knowledge base.</li>
+              <li>Save as draft and test before publishing.</li>
+            </ul>
+
+            <hr class="sds-divider" />
+
+            <h3>Prompt tips</h3>
+            <p>
+              Keep it tight, define refusal behavior, and reference tool names explicitly when you want the
+              agent to call them.
+            </p>
+          </article>
+        </aside>
+      </section>
+    </main>
+  </div>
+</div>

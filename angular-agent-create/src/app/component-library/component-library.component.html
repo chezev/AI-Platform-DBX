@@ -1,0 +1,345 @@
+<main sdsPage class="library-page">
+  <header sdsPageHeader class="library-hero">
+    <div class="hero-copy">
+      <p class="eyebrow">SDS UI Foundation</p>
+      <h1>Component Inventory and Usage Rules</h1>
+      <span>One component layer for every product screen. Raw shadcn primitives stay in the repo; SDS adapters are what feature pages consume.</span>
+    </div>
+
+    <nav class="foundation-nav" aria-label="Foundation sections">
+      <a href="#sds-ready">SDS Ready</a>
+      <a href="#primitives">Shadcn Inventory</a>
+      <a href="#live-examples">Live Examples</a>
+      <a href="/forms">Forms</a>
+      <a href="/examples">Pages</a>
+    </nav>
+  </header>
+
+  <section class="metric-grid" aria-label="Component counts">
+    <article sdsPanel>
+      <strong>{{ sdsReadyCount }}</strong>
+      <span>SDS-ready adapters and product patterns</span>
+    </article>
+    <article sdsPanel>
+      <strong>{{ primitiveCount }}</strong>
+      <span>Raw shadcn/Spartan primitives available in `shared/ui`</span>
+    </article>
+    <article sdsPanel>
+      <strong>1</strong>
+      <span>Rule: feature screens consume adapters, not one-off page CSS</span>
+    </article>
+  </section>
+
+  <section id="sds-ready" sdsPanel class="library-section" aria-labelledby="sds-ready-title">
+    <div class="section-heading">
+      <p class="eyebrow">SDS Ready</p>
+      <h2 id="sds-ready-title">Reusable Adapters We Can Use Today</h2>
+      <span>These are the shared building blocks for Agent List, Create Agent, Template Detail, and the upcoming registries.</span>
+    </div>
+
+    <div class="inventory-grid">
+      @for (group of sdsReadyGroups; track group.title) {
+        <article class="inventory-card" sdsCard>
+          <header>
+            <h3>{{ group.title }}</h3>
+            <span sdsBadge>{{ group.items.length }}</span>
+          </header>
+          <p>{{ group.description }}</p>
+          <div class="chip-list" aria-label="SDS-ready components">
+            @for (item of group.items; track item) {
+              <span class="inventory-chip">{{ item }}</span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section id="primitives" sdsPanel class="library-section" aria-labelledby="primitive-title">
+    <div class="section-heading">
+      <p class="eyebrow">Shadcn Inventory</p>
+      <h2 id="primitive-title">Raw Primitives Already Pulled Into the Folder</h2>
+      <span>These exist under `src/app/shared/ui`. We will wrap them with SDS styles before using them in product screens.</span>
+    </div>
+
+    <div class="primitive-grid">
+      @for (group of primitiveGroups; track group.title) {
+        <article class="primitive-card" sdsCard>
+          <header>
+            <h3>{{ group.title }}</h3>
+            <span sdsBadge>{{ group.items.length }}</span>
+          </header>
+          <p>{{ group.description }}</p>
+          <div class="primitive-list" aria-label="Available shadcn primitives">
+            @for (item of group.items; track item) {
+              <span>{{ item }}</span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section id="live-examples" sdsPanel class="library-section" aria-labelledby="examples-title">
+    <div class="section-heading">
+      <p class="eyebrow">Live Examples</p>
+      <h2 id="examples-title">States, Behavior, and Spacing Samples</h2>
+      <span>These are the pieces we validate visually before they go into feature pages.</span>
+    </div>
+
+    <div class="component-grid">
+      <article class="foundation-card full-span" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>App Topbar</h3>
+          <span sdsBadge>Shared Chrome</span>
+        </header>
+
+        <div class="topbar-demo">
+          <app-sds-topbar searchId="foundation-global-search"></app-sds-topbar>
+        </div>
+      </article>
+
+      <article class="foundation-card" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>Buttons</h3>
+          <span sdsBadge>CTA Title Case</span>
+        </header>
+
+        <div class="example-stack">
+          <div class="component-row">
+            <button type="button" sdsButton variant="primary">
+              <app-sds-icon name="add" [size]="16"></app-sds-icon>
+              Create Agent
+            </button>
+            <button type="button" sdsButton variant="secondary">Save As Draft</button>
+            <button type="button" sdsButton variant="ghost">View Details</button>
+            <button type="button" sdsButton variant="primary" disabled>Submit</button>
+          </div>
+
+          <div class="dark-action-bar" aria-label="Dark header button examples">
+            <button type="button" sdsButton variant="inverse-secondary" size="xs">Test Agent</button>
+            <button type="button" sdsButton variant="inverse-primary" size="xs">Create Agent</button>
+            <button type="button" sdsIconButton variant="inverse" size="xs" aria-label="More actions">
+              <app-sds-icon name="kebab" [size]="14"></app-sds-icon>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <article class="foundation-card" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>Icon Buttons</h3>
+          <span sdsBadge>Shared Sizes</span>
+        </header>
+
+        <div class="example-stack">
+          <div class="component-row">
+            <button type="button" sdsIconButton aria-label="Filter">
+              <app-sds-icon name="funnel" [size]="16"></app-sds-icon>
+            </button>
+            <button type="button" sdsIconButton aria-label="Card view">
+              <app-sds-icon name="table" [size]="16"></app-sds-icon>
+            </button>
+            <button type="button" sdsIconButton aria-label="List view">
+              <app-sds-icon name="layout-lists" [size]="16"></app-sds-icon>
+            </button>
+            <button type="button" sdsIconButton variant="ghost" aria-label="More actions">
+              <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+            </button>
+          </div>
+
+          <p class="support-copy">Toolbar icons, list actions, card actions, and header utility actions reuse this set.</p>
+        </div>
+      </article>
+
+      <article class="foundation-card" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>Select</h3>
+          <span sdsBadge>Exact Width</span>
+        </header>
+
+        <div class="example-stack compact-stack">
+          <div class="select-demo" sdsSelect [value]="status()" (valueChange)="onStatusChange($any($event))">
+            <sds-select-trigger>
+              <span>{{ status() }}</span>
+            </sds-select-trigger>
+
+            <sds-select-content *sdsSelectPortal>
+              <sds-select-group-label>Status</sds-select-group-label>
+              @for (option of statusOptions; track option) {
+                <sds-select-item [value]="option">{{ option }}</sds-select-item>
+              }
+            </sds-select-content>
+          </div>
+
+          <div class="select-demo wide" sdsSelect [value]="project()" (valueChange)="onProjectChange($any($event))">
+            <sds-select-trigger>
+              <span>{{ project() }}</span>
+            </sds-select-trigger>
+
+            <sds-select-content *sdsSelectPortal>
+              <sds-select-group-label>Projects</sds-select-group-label>
+              @for (option of projectOptions; track option) {
+                <sds-select-item [value]="option">{{ option }}</sds-select-item>
+              }
+            </sds-select-content>
+          </div>
+        </div>
+      </article>
+
+      <article class="foundation-card" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>Inputs</h3>
+          <span sdsBadge>Darwin Sans</span>
+        </header>
+
+        <div class="example-stack compact-stack">
+          <label sdsField for="foundation-search">
+            <span>Search</span>
+            <div sdsSearchField>
+              <input id="foundation-search" type="search" placeholder="Search agents" />
+              <app-sds-icon name="search" [size]="16"></app-sds-icon>
+            </div>
+          </label>
+
+          <label sdsField for="foundation-name">
+            <span>Name</span>
+            <input sdsInput id="foundation-name" type="text" placeholder="Enter agent name" />
+          </label>
+        </div>
+      </article>
+
+      <article class="foundation-card" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>Form Group</h3>
+          <span sdsBadge>20px Rhythm</span>
+        </header>
+
+        <section sdsFormSection data-divider="none">
+          <header sdsSectionHeader>
+            <h3>Identity</h3>
+            <p>Give your agent a clear name, description, and select a project.</p>
+          </header>
+
+          <div sdsFieldGrid data-columns="2">
+            <label sdsField for="agent-name-demo">
+              <span>Name</span>
+              <input sdsInput id="agent-name-demo" type="text" placeholder="Enter agent name" />
+            </label>
+
+            <div sdsField>
+              <span>Project <strong>*</strong></span>
+              <div class="select-demo wide" sdsSelect [value]="project()" (valueChange)="onProjectChange($any($event))">
+                <sds-select-trigger>
+                  <span>{{ project() }}</span>
+                </sds-select-trigger>
+
+                <sds-select-content *sdsSelectPortal>
+                  @for (option of projectOptions; track option) {
+                    <sds-select-item [value]="option">{{ option }}</sds-select-item>
+                  }
+                </sds-select-content>
+              </div>
+            </div>
+          </div>
+
+          <label sdsField for="agent-description-demo">
+            <span>Description</span>
+            <textarea sdsTextarea id="agent-description-demo" placeholder="Enter instructions and variables"></textarea>
+          </label>
+        </section>
+      </article>
+
+      <article class="foundation-card" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>Multi-Select Tags</h3>
+          <span sdsBadge>Removable</span>
+        </header>
+
+        <div sdsField>
+          <span>Select Trigger Options <strong>*</strong></span>
+          <button type="button" class="tag-select" aria-label="Select trigger options">
+            <span class="tag-list">
+              @for (option of triggerOptions.slice(0, 2); track option) {
+                <span class="trigger-tag">{{ option }} <app-sds-icon name="x" [size]="10"></app-sds-icon></span>
+              }
+            </span>
+            <app-sds-icon name="chevron-down" [size]="16"></app-sds-icon>
+          </button>
+        </div>
+      </article>
+
+      <article class="foundation-card" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>Agent Card</h3>
+          <span sdsBadge>2-Line Body</span>
+        </header>
+
+        <div class="agent-card-demo">
+          <h4>Payroll Compliance Agent</h4>
+          <p>Monitors payroll data to ensure compliance with local labor laws and tax regulations.</p>
+          <div class="agent-meta-row">
+            <span><span class="dot blue-dot"></span> HR Payroll</span>
+            <span><span class="dot green-dot"></span> Active | 5 Days Ago</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="foundation-card" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>Resource Card</h3>
+          <span sdsBadge>Modal Row</span>
+        </header>
+
+        <article sdsResourceCard>
+          <div>
+            <strong>DB MCP</strong>
+            <p>Fetches data from the Darwinbox platform for HRMS and human resources data.</p>
+          </div>
+          <span sdsBadge>MCP Server</span>
+        </article>
+      </article>
+
+      <article class="foundation-card full-span" sdsCard>
+        <header sdsCardHeader>
+          <h3 sdsCardTitle>List Toolbar</h3>
+          <span sdsBadge>Reusable Page Pattern</span>
+        </header>
+
+        <div sdsToolbar>
+          <label sdsSearchField class="toolbar-search" for="toolbar-search-demo">
+            <input id="toolbar-search-demo" type="search" placeholder="Search here" />
+            <app-sds-icon name="search" [size]="16"></app-sds-icon>
+          </label>
+
+          <div class="sds-toolbar-group">
+            <div class="select-demo compact" sdsSelect [value]="status()" (valueChange)="onStatusChange($any($event))">
+              <sds-select-trigger>
+                <span>{{ status() }}</span>
+              </sds-select-trigger>
+
+              <sds-select-content *sdsSelectPortal>
+                @for (option of statusOptions; track option) {
+                  <sds-select-item [value]="option">{{ option }}</sds-select-item>
+                }
+              </sds-select-content>
+            </div>
+            <button type="button" sdsIconButton size="sm" aria-label="Filter">
+              <app-sds-icon name="funnel" [size]="14"></app-sds-icon>
+            </button>
+            <button type="button" sdsIconButton size="sm" aria-label="Card view">
+              <app-sds-icon name="table" [size]="14"></app-sds-icon>
+            </button>
+            <button type="button" sdsIconButton size="sm" aria-label="List view">
+              <app-sds-icon name="layout-lists" [size]="14"></app-sds-icon>
+            </button>
+            <button type="button" sdsButton variant="primary" size="sm">
+              <app-sds-icon name="add" [size]="14"></app-sds-icon>
+              Create Agent
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>

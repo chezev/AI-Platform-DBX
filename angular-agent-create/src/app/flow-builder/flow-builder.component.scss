@@ -1,0 +1,81 @@
+:host {
+  display: block;
+}
+
+.feature-shell {
+  min-height: 100vh;
+  padding: var(--sds-padding-32);
+  background: var(--sds-bg-neutralGrey-light2);
+}
+
+.feature-card {
+  max-width: 920px;
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
+  padding: var(--sds-padding-24);
+}
+
+.feature-eyebrow {
+  margin: 0 0 var(--sds-gap-8);
+  color: var(--sds-text-neutral-ghost);
+  font-size: var(--sds-body-s-medium-font-size);
+  font-weight: var(--sds-body-s-medium-font-weight);
+  line-height: var(--sds-body-s-medium-line-height);
+  text-transform: uppercase;
+}
+
+.feature-card h1 {
+  margin: 0;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-s-bold-font-size);
+  font-weight: var(--sds-title-s-bold-font-weight);
+  line-height: var(--sds-title-s-bold-line-height);
+}
+
+.feature-card p {
+  margin: var(--sds-gap-12) 0 0;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-m-book-font-size);
+  font-weight: var(--sds-body-m-book-font-weight);
+  line-height: var(--sds-body-m-book-line-height);
+}
+
+.feature-back,
+.feature-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--sds-control-height);
+  border: 1px solid var(--sds-border-primary-default);
+  border-radius: var(--sds-border-radius-4);
+  padding: 0 var(--sds-padding-12);
+  background: var(--sds-bg-neutralWhite-default);
+  color: var(--sds-text-neutral-title);
+  text-decoration: none;
+  font-size: var(--sds-body-m-medium-font-size);
+  font-weight: var(--sds-body-m-medium-font-weight);
+  line-height: var(--sds-body-m-medium-line-height);
+}
+
+.feature-back {
+  margin-bottom: var(--sds-gap-16);
+}
+
+.feature-actions {
+  margin-top: var(--sds-gap-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-8);
+}
+
+.feature-note code,
+.feature-card code {
+  font-size: var(--sds-body-s-medium-font-size);
+}
+
+@media (max-width: 768px) {
+  .feature-shell {
+    padding: var(--sds-padding-16);
+  }
+}

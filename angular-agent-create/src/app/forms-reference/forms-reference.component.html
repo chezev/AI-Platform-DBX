@@ -1,0 +1,203 @@
+<main sdsPage class="forms-reference-page">
+  <header sdsPageHeader>
+    <div>
+      <h1>Forms Reference</h1>
+      <p>Spacing, type, control sizing, hover states, and reusable form groups for SDS screens.</p>
+    </div>
+
+    <nav class="reference-links" aria-label="Reference pages">
+      <a href="/components">Components</a>
+      <a href="/examples">Example Pages</a>
+    </nav>
+  </header>
+
+  <section sdsPanel aria-labelledby="contract-title">
+    <header>
+      <h2 id="contract-title">Form Rhythm Contract</h2>
+      <p>These values are the baseline for agent forms and future product screens.</p>
+    </header>
+
+    <div class="contract-grid">
+      <article>
+        <strong>Section title to description</strong>
+        <span>4px gap</span>
+      </article>
+      <article>
+        <strong>Field label to control</strong>
+        <span>4px gap</span>
+      </article>
+      <article>
+        <strong>Between form groups</strong>
+        <span>20px gap</span>
+      </article>
+      <article>
+        <strong>Controls</strong>
+        <span>32px height, 8px right chevron spacing</span>
+      </article>
+    </div>
+  </section>
+
+  <section sdsPanel aria-labelledby="form-title">
+    <header class="panel-heading-row">
+      <div>
+        <h2 id="form-title">Agent Form Example</h2>
+        <p>All fields use shared SDS adapters and the same reusable layout primitives.</p>
+      </div>
+      <button type="button" sdsButton variant="ghost" size="sm">
+        <app-sds-icon name="ai-panel" [size]="14"></app-sds-icon>
+        Quick Start
+      </button>
+    </header>
+
+    <article sdsCard class="form-card">
+      <section sdsFormSection data-divider="none">
+        <header sdsSectionHeader>
+          <h3>Identity</h3>
+          <p>Give your agent a clear name, description, and select a project.</p>
+        </header>
+
+        <div sdsFieldGrid data-columns="2">
+          <label sdsField for="forms-agent-name">
+            <span>Name</span>
+            <input sdsInput id="forms-agent-name" type="text" placeholder="Enter agent name" />
+          </label>
+
+          <div sdsField>
+            <span>Project <strong>*</strong></span>
+            <div class="full-select" sdsSelect [value]="project()" (valueChange)="onProjectChange($any($event))">
+              <sds-select-trigger>
+                <span>{{ project() }}</span>
+              </sds-select-trigger>
+              <sds-select-content *sdsSelectPortal>
+                @for (option of projectOptions; track option) {
+                  <sds-select-item [value]="option">{{ option }}</sds-select-item>
+                }
+              </sds-select-content>
+            </div>
+          </div>
+        </div>
+
+        <label sdsField for="forms-description">
+          <span>Description</span>
+          <textarea sdsTextarea id="forms-description" placeholder="Enter instructions and variables"></textarea>
+        </label>
+      </section>
+
+      <section sdsFormSection>
+        <header sdsSectionHeader>
+          <h3>Agent Trigger Options</h3>
+          <p>Choose where this agent can be selected or invoked.</p>
+        </header>
+
+        <div sdsField>
+          <span>Select Trigger Options <strong>*</strong></span>
+          <button type="button" class="tag-select" aria-label="Select trigger options">
+            <span class="tag-row">
+              <span class="trigger-tag">Super Agent <app-sds-icon name="x" [size]="10"></app-sds-icon></span>
+              <span class="trigger-tag">Web <app-sds-icon name="x" [size]="10"></app-sds-icon></span>
+            </span>
+            <app-sds-icon name="chevron-down" [size]="16"></app-sds-icon>
+          </button>
+        </div>
+      </section>
+
+      <section sdsFormSection>
+        <header sdsSectionHeader>
+          <h3>Agent Instructions</h3>
+          <p>Define behavior, sources, and response boundaries for the agent.</p>
+        </header>
+
+        <label sdsField for="forms-instructions">
+          <span>Write your instructions</span>
+          <textarea sdsTextarea id="forms-instructions">You are a Darwinbox agent. Help users complete HR tasks with clear steps and use connected tools before giving final answers.</textarea>
+          <small>Placeholders are filled from HR data for the user running the agent.</small>
+        </label>
+      </section>
+    </article>
+  </section>
+
+  <section sdsPanel aria-labelledby="model-title">
+    <header>
+      <h2 id="model-title">Model Configuration Example</h2>
+      <p>Reusable select and range layout for LLM configuration.</p>
+    </header>
+
+    <article sdsCard class="form-card compact-card">
+      <section sdsFormSection data-divider="none">
+        <header sdsSectionHeader>
+          <h3>LLM Provider & Model</h3>
+          <p>Choose the AI provider and model that powers this agent.</p>
+        </header>
+
+        <div sdsFieldGrid data-columns="2">
+          <div sdsField>
+            <span>Provider <strong>*</strong></span>
+            <div class="full-select" sdsSelect [value]="provider()" (valueChange)="onProviderChange($any($event))">
+              <sds-select-trigger>
+                <span>{{ provider() }}</span>
+              </sds-select-trigger>
+              <sds-select-content *sdsSelectPortal>
+                @for (option of providerOptions; track option) {
+                  <sds-select-item [value]="option">{{ option }}</sds-select-item>
+                }
+              </sds-select-content>
+            </div>
+          </div>
+
+          <div sdsField>
+            <span>Model <strong>*</strong></span>
+            <div class="full-select" sdsSelect [value]="model()" (valueChange)="onModelChange($any($event))">
+              <sds-select-trigger>
+                <span>{{ model() }}</span>
+              </sds-select-trigger>
+              <sds-select-content *sdsSelectPortal>
+                @for (option of modelOptions; track option) {
+                  <sds-select-item [value]="option">{{ option }}</sds-select-item>
+                }
+              </sds-select-content>
+            </div>
+          </div>
+        </div>
+
+        <label sdsField for="forms-key-profile">
+          <span>Key Profile</span>
+          <input sdsInput id="forms-key-profile" type="text" value="Pranav kumar" />
+        </label>
+      </section>
+    </article>
+  </section>
+
+  <section sdsPanel aria-labelledby="controls-title">
+    <header>
+      <h2 id="controls-title">Control States</h2>
+      <p>Hover, focus, disabled, toolbar, search, and compact action sizing.</p>
+    </header>
+
+    <div sdsToolbar>
+      <label sdsSearchField class="toolbar-search" for="forms-search">
+        <input id="forms-search" type="search" placeholder="Search agents" />
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+      </label>
+
+      <div class="sds-toolbar-group">
+        <div class="status-select" sdsSelect [value]="status()" (valueChange)="onStatusChange($any($event))">
+          <sds-select-trigger>
+            <span>{{ status() }}</span>
+          </sds-select-trigger>
+          <sds-select-content *sdsSelectPortal>
+            @for (option of statusOptions; track option) {
+              <sds-select-item [value]="option">{{ option }}</sds-select-item>
+            }
+          </sds-select-content>
+        </div>
+        <button type="button" sdsIconButton size="sm" aria-label="Filter">
+          <app-sds-icon name="funnel" [size]="14"></app-sds-icon>
+        </button>
+        <button type="button" sdsButton variant="primary" size="sm">
+          <app-sds-icon name="add" [size]="14"></app-sds-icon>
+          Create Agent
+        </button>
+      </div>
+    </div>
+  </section>
+</main>

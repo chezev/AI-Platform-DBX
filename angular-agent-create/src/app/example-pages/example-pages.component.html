@@ -1,0 +1,167 @@
+<main sdsPage class="example-pages">
+  <header sdsPageHeader>
+    <div>
+      <h1>Example Pages</h1>
+      <p>Reusable screen layouts that consume the same SDS component foundation.</p>
+    </div>
+
+    <nav class="reference-links" aria-label="Reference pages">
+      <a href="/components">Components</a>
+      <a href="/forms">Forms</a>
+    </nav>
+  </header>
+
+  <section sdsPanel aria-labelledby="list-title">
+    <header>
+      <h2 id="list-title">Agent List Pattern</h2>
+      <p>Toolbar, status filter, card/list switch, actions, metadata, and card rhythm.</p>
+    </header>
+
+    <div sdsToolbar>
+      <label sdsSearchField class="agent-search" for="example-agent-search">
+        <input id="example-agent-search" type="search" placeholder="Search here" />
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+      </label>
+
+      <div class="sds-toolbar-group">
+        <div class="status-select" sdsSelect [value]="status()" (valueChange)="onStatusChange($any($event))">
+          <sds-select-trigger>
+            <span>{{ status() }}</span>
+          </sds-select-trigger>
+          <sds-select-content *sdsSelectPortal>
+            @for (option of statusOptions; track option) {
+              <sds-select-item [value]="option">{{ option }}</sds-select-item>
+            }
+          </sds-select-content>
+        </div>
+
+        <button type="button" sdsIconButton size="sm" aria-label="Filter">
+          <app-sds-icon name="funnel" [size]="14"></app-sds-icon>
+        </button>
+        <button type="button" sdsIconButton size="sm" [class.is-active]="view() === 'card'" aria-label="Card view" (click)="setView('card')">
+          <app-sds-icon name="table" [size]="14"></app-sds-icon>
+        </button>
+        <button type="button" sdsIconButton size="sm" [class.is-active]="view() === 'list'" aria-label="List view" (click)="setView('list')">
+          <app-sds-icon name="layout-lists" [size]="14"></app-sds-icon>
+        </button>
+        <button type="button" sdsButton variant="primary" size="sm">
+          <app-sds-icon name="add" [size]="14"></app-sds-icon>
+          Create Agent
+        </button>
+      </div>
+    </div>
+
+    @if (view() === 'card') {
+      <div class="agent-grid">
+        @for (agent of agents; track agent.name) {
+          <article sdsCard class="agent-card">
+            <header>
+              <h3>{{ agent.name }}</h3>
+              <button type="button" sdsIconButton variant="ghost" size="xs" [attr.aria-label]="agent.name + ' actions'">
+                <app-sds-icon name="kebab" [size]="14"></app-sds-icon>
+              </button>
+            </header>
+            <p>{{ agent.description }}</p>
+            <footer>
+              <span class="meta-dot" [attr.data-tone]="agent.dot"></span>
+              <span>{{ agent.category }}</span>
+              <span class="status-meta">
+                <span class="meta-dot" [attr.data-tone]="agent.status === 'Active' ? 'green' : 'grey'"></span>
+                {{ agent.status }} | {{ agent.updated }}
+              </span>
+            </footer>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="agent-list">
+        @for (agent of agents; track agent.name) {
+          <article sdsResourceCard class="agent-row">
+            <div>
+              <h3>{{ agent.name }}</h3>
+              <p>{{ agent.description }}</p>
+            </div>
+            <span sdsBadge>{{ agent.category }}</span>
+            <span>{{ agent.status }}</span>
+            <span>{{ agent.updated }}</span>
+            <button type="button" sdsIconButton variant="ghost" size="xs" [attr.aria-label]="agent.name + ' actions'">
+              <app-sds-icon name="kebab" [size]="14"></app-sds-icon>
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <section sdsPanel aria-labelledby="header-title">
+    <header>
+      <h2 id="header-title">Create Header Pattern</h2>
+      <p>Dark strip actions use the same compact inverse buttons across create flows.</p>
+    </header>
+
+    <div class="dark-strip">
+      <div class="strip-title">
+        <app-sds-icon name="arrow-left" [size]="12"></app-sds-icon>
+        <span>Onboarding Agent</span>
+        <span sdsBadge>Draft</span>
+      </div>
+      <div class="strip-actions">
+        <button type="button" sdsButton variant="inverse-secondary" size="xs">Test Agent</button>
+        <button type="button" sdsButton variant="inverse-primary" size="xs">Create Agent</button>
+        <button type="button" sdsIconButton variant="inverse" size="xs" aria-label="More actions">
+          <app-sds-icon name="kebab" [size]="14"></app-sds-icon>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section sdsPanel aria-labelledby="modal-title">
+    <header>
+      <h2 id="modal-title">Catalog Modal Pattern</h2>
+      <p>Fixed shell, full-width search row when opened, scrollable resource list, and bottom actions.</p>
+    </header>
+
+    <article class="modal-preview">
+      <header>
+        <h3>Add Tool</h3>
+        <div>
+          <button type="button" sdsIconButton variant="ghost" size="xs" aria-label="Open search">
+            <app-sds-icon name="search" [size]="14"></app-sds-icon>
+          </button>
+          <button type="button" sdsIconButton variant="ghost" size="xs" aria-label="Close">
+            <app-sds-icon name="x" [size]="14"></app-sds-icon>
+          </button>
+        </div>
+      </header>
+
+      <div class="modal-preview-body">
+        <aside>
+          <button type="button" class="rail-item is-active">
+            <app-sds-icon name="circle-check" [size]="16"></app-sds-icon>
+            All Tools
+          </button>
+          <button type="button" class="rail-item">
+            <app-sds-icon name="sparkles" [size]="16"></app-sds-icon>
+            Connectors
+          </button>
+          <button type="button" class="rail-item">
+            <app-sds-icon name="wrench" [size]="16"></app-sds-icon>
+            API Connections
+          </button>
+        </aside>
+        <div class="resource-column">
+          <article sdsResourceCard>
+            <strong>DB MCP</strong>
+            <p>Fetches data from the Darwinbox platform for HRMS and human resources data.</p>
+            <span sdsBadge>MCP Server</span>
+          </article>
+          <article sdsResourceCard>
+            <strong>Generate Flow Diagram</strong>
+            <p>Use this tool to generate flow diagrams in PNG format from Mermaid code.</p>
+            <span sdsBadge>Connectors</span>
+          </article>
+        </div>
+      </div>
+    </article>
+  </section>
+</main>

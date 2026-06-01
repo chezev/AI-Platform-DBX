@@ -1,0 +1,120 @@
+<section class="sds-catalog-dialog" role="dialog" aria-modal="true" [attr.aria-label]="resolvedTitle()">
+  <header class="sds-catalog-header">
+    <h2>{{ resolvedTitle() }}</h2>
+
+    <div class="sds-catalog-header-actions">
+      <button
+        type="button"
+        sdsIconButton
+        variant="ghost"
+        size="xs"
+        aria-label="Search catalog"
+        [attr.aria-expanded]="searchOpen()"
+        (click)="toggleSearch()"
+      >
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+      </button>
+
+      <button type="button" sdsIconButton variant="ghost" size="xs" aria-label="Close catalog" (click)="closeDialog.emit()">
+        <app-sds-icon name="x" [size]="16"></app-sds-icon>
+      </button>
+    </div>
+  </header>
+
+  @if (searchOpen()) {
+    <div class="sds-catalog-search-row">
+      <label class="sds-catalog-search" for="catalog-search-input">
+        <input
+          sdsInput
+          #catalogSearchInput
+          id="catalog-search-input"
+          type="search"
+          placeholder="Search"
+          autofocus
+          [value]="searchTerm()"
+          (input)="updateSearch($any($event.target).value)"
+          (keydown.escape)="closeSearch()"
+        />
+      </label>
+    </div>
+  }
+
+  <div class="sds-catalog-body" [class.has-rail]="categories().length">
+    @if (categories().length) {
+      <aside class="sds-catalog-rail" aria-label="Catalog categories">
+        @for (category of categories(); track trackCategory($index, category)) {
+          <button
+            type="button"
+            class="sds-catalog-category"
+            [class.is-active]="activeCategoryId() === category.id"
+            (click)="selectCategory(category.id)"
+          >
+            <span class="sds-catalog-category-icon">
+              <app-sds-icon [name]="category.icon ?? 'circle-check'" [size]="16"></app-sds-icon>
+            </span>
+            <span class="sds-catalog-category-copy">
+              <span>{{ category.label }}</span>
+              @if (category.meta) {
+                <small>{{ category.meta }}</small>
+              }
+            </span>
+            @if (category.count !== undefined) {
+              <span class="sds-catalog-count">{{ category.count }}</span>
+            }
+          </button>
+        }
+      </aside>
+    }
+
+    <section class="sds-catalog-list" aria-label="Catalog resources">
+      @for (group of groupedItems(); track trackGroup($index, group)) {
+        @if (group.title) {
+          <h3>{{ group.title }}</h3>
+        }
+
+        @for (item of group.items; track trackItem($index, item)) {
+          <button
+            type="button"
+            class="sds-catalog-item"
+            [class.is-selected]="isSelected(item.id)"
+            [attr.aria-pressed]="isSelected(item.id)"
+            (click)="toggleItem(item.id)"
+          >
+            <span class="sds-catalog-checkbox" [class.is-checked]="isSelected(item.id)" aria-hidden="true">
+              @if (isSelected(item.id)) {
+                <app-sds-icon name="check" [size]="12"></app-sds-icon>
+              }
+            </span>
+
+            <span class="sds-catalog-item-copy">
+              <span class="sds-catalog-item-title-row">
+                <strong>{{ item.title }}</strong>
+                @if (item.badge) {
+                  <em>{{ item.badge }}</em>
+                }
+              </span>
+              <span class="sds-catalog-description">{{ item.description }}</span>
+              @if (item.metadata) {
+                <span class="sds-catalog-meta">{{ item.metadata }}</span>
+              }
+            </span>
+          </button>
+        }
+      } @empty {
+        <p class="sds-catalog-empty">No matching resources</p>
+      }
+    </section>
+  </div>
+
+  <footer class="sds-catalog-footer">
+    <a href="#" class="sds-catalog-manage" (click)="$event.preventDefault()">
+      {{ manageLabel() }}
+      <app-sds-icon name="external-link" [size]="14"></app-sds-icon>
+    </a>
+
+    <div class="sds-catalog-footer-actions">
+      <button type="button" sdsButton variant="secondary" (click)="closeDialog.emit()">Cancel</button>
+      <button type="button" sdsButton variant="primary" (click)="commitSelection()">{{ confirmLabel() }}</button>
+    </div>
+  </footer>
+</section>
