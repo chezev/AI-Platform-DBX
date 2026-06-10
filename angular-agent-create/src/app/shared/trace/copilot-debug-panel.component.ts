@@ -15,13 +15,17 @@ import { TraceDebugResult } from './trace.types';
           <span>Copilot Debug</span>
         </div>
         <button type="button" sdsButton variant="secondary" size="xs" (click)="debugFull.emit()">
-          Debug Full Trace
+          {{ thinking || debugResult ? 'Retry' : 'Debug Full Trace' }}
         </button>
       </header>
 
-      @if (debugResult) {
+      @if (thinking) {
+        <div class="debug-thinking" aria-live="polite">
+          <span class="firework" aria-hidden="true"></span>
+          <span class="terminal-line">{{ thinkingText }}</span>
+        </div>
+      } @else if (debugResult) {
         <article class="debug-answer" aria-live="polite">
-          <strong>{{ debugResult.title }}</strong>
           <dl>
             <div>
               <dt>What Happened</dt>
@@ -93,21 +97,14 @@ import { TraceDebugResult } from './trace.types';
     .debug-answer {
       display: flex;
       flex-direction: column;
-      gap: var(--sds-gap-8);
-    }
-
-    .debug-answer > strong {
-      color: var(--sds-text-neutral-title);
-      font-size: var(--sds-body-s-medium-font-size);
-      font-weight: var(--sds-body-s-medium-font-weight);
-      line-height: var(--sds-body-s-medium-line-height);
     }
 
     dl {
       margin: 0;
       display: flex;
       flex-direction: column;
-      gap: var(--sds-gap-8);
+      /* Block = title + description; +4px between blocks (12 -> 16). */
+      gap: var(--sds-gap-16);
     }
 
     dl div {
@@ -116,11 +113,12 @@ import { TraceDebugResult } from './trace.types';
       gap: var(--sds-gap-4);
     }
 
+    /* Section titles read as titles. */
     dt {
       color: var(--sds-text-neutral-title);
-      font-size: var(--sds-caption-medium-font-size);
-      font-weight: var(--sds-caption-medium-font-weight);
-      line-height: var(--sds-caption-medium-line-height);
+      font-size: var(--sds-body-m-medium-font-size);
+      font-weight: var(--sds-body-m-medium-font-weight);
+      line-height: var(--sds-body-m-medium-line-height);
     }
 
     dd {
@@ -130,10 +128,65 @@ import { TraceDebugResult } from './trace.types';
       font-weight: var(--sds-body-s-book-font-weight);
       line-height: var(--sds-body-s-book-line-height);
     }
+
+    /* ── Thinking: animated AI icon + terminal typewriter text with block cursor ── */
+    .debug-thinking {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sds-gap-8);
+      font-size: var(--sds-body-s-book-font-size);
+      line-height: var(--sds-body-s-book-line-height);
+    }
+
+    /* Asterisk that blooms like a firework: square -> plus -> asterisk -> star
+       -> flower, with a scale/spin burst. */
+    .firework {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+      line-height: 1;
+      color: var(--sds-bg-neutralBlue-active);
+      text-shadow: 0 0 6px rgba(1, 131, 255, 0.45);
+    }
+
+    /* Slow, frame-by-frame bloom so each shape is clearly visible. */
+    .firework::before {
+      content: '✳';
+      display: inline-block;
+      color: var(--sds-bg-neutralBlue-active);
+      animation:
+        trace-fw-glyph 1.1s steps(1) infinite,
+        trace-fw-burst 1.1s ease-in-out infinite;
+    }
+
+    @keyframes trace-fw-glyph {
+      0% { content: '▪'; }
+      20% { content: '✚'; }
+      40% { content: '✳'; }
+      60% { content: '✶'; }
+      80% { content: '❋'; }
+    }
+
+    @keyframes trace-fw-burst {
+      0% { transform: scale(0.72); opacity: 0.6; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.72); opacity: 0.6; }
+    }
+
+    .terminal-line {
+      font-family: ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+      color: var(--sds-text-neutral-title);
+      white-space: pre;
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CopilotDebugPanelComponent {
   @Input() debugResult: TraceDebugResult | null = null;
+  @Input() thinking = false;
+  @Input() thinkingText = 'Debugging…';
   @Output() readonly debugFull = new EventEmitter<void>();
 }

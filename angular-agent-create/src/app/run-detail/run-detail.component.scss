@@ -1,0 +1,277 @@
+:host {
+  display: block;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--sds-bg-neutralGrey-light2);
+  color: var(--sds-text-neutral-body);
+  font-family: 'Darwin Sans', 'Segoe UI', sans-serif;
+}
+
+/* Topbar + breadcrumb stay fixed; only the workspace scrolls. */
+.run-shell {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.run-shell app-sds-topbar,
+.run-subheader {
+  flex: 0 0 auto;
+}
+
+.run-subheader {
+  height: 40px;
+  padding: 0 var(--sds-padding-24);
+  background: var(--sds-bg-primary-active);
+  display: flex;
+  align-items: center;
+  gap: var(--sds-gap-8);
+  color: var(--sds-text-neutral-ghost);
+  font-size: var(--sds-body-m-medium-font-size);
+  font-weight: var(--sds-body-m-medium-font-weight);
+  line-height: var(--sds-body-m-medium-line-height);
+}
+
+.run-subheader a {
+  color: var(--sds-text-neutral-ghost);
+  text-decoration: none;
+}
+
+.run-subheader a:hover {
+  color: var(--sds-bg-neutralWhite-default);
+}
+
+.run-subheader .divider {
+  color: var(--sds-text-neutral-label);
+}
+
+.run-subheader strong {
+  color: var(--sds-bg-neutralWhite-default);
+  font-weight: var(--sds-body-m-medium-font-weight);
+}
+
+/* Dark mode: the always-dark band turns pure black + the current crumb (white
+   token) goes invisible — use the topbar surface and a light title instead. */
+:host-context(.dark) .run-subheader {
+  background: var(--sds-bg-neutralWhite-default);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+}
+
+:host-context(.dark) .run-subheader strong {
+  color: var(--sds-text-neutral-title);
+}
+
+/* Hover uses the white token too, which is dark in dark mode — brighten instead. */
+:host-context(.dark) .run-subheader a:hover {
+  color: var(--sds-text-neutral-title);
+}
+
+.run-workspace {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: var(--sds-padding-24);
+  overflow: hidden;
+}
+
+/* When a trace is open: trace panel on the left, conversation on the right
+   (mirrors the test screen). */
+.run-workspace.has-trace {
+  display: grid;
+  grid-template-columns: calc(388px + 88px + var(--sds-gap-16)) minmax(0, 1fr);
+  column-gap: 50px;
+  align-items: stretch;
+  transition: grid-template-columns 280ms ease;
+}
+
+.run-workspace.is-trace-expanded {
+  grid-template-columns: calc(640px + 88px + var(--sds-gap-16)) minmax(0, 1fr);
+}
+
+.run-trace-panel {
+  --trace-panel-width: 388px;
+  height: 100%;
+  min-height: 0;
+}
+
+.run-workspace.is-trace-expanded .run-trace-panel {
+  --trace-panel-width: 640px;
+}
+
+/* Only the session/run content scrolls; the topbar + breadcrumb stay fixed. */
+.run-content {
+  height: 100%;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-16);
+  /* Full-width conversation (was capped + centered at 980px). */
+  width: 100%;
+  scrollbar-width: thin;
+}
+
+/* Stats card */
+.stats-card,
+.conversation-card {
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
+  box-shadow: var(--sds-shadow-card);
+}
+
+.stats-card {
+  padding: var(--sds-padding-16) var(--sds-padding-20);
+  display: flex;
+  align-items: center;
+  gap: var(--sds-gap-32);
+  flex-wrap: wrap;
+}
+
+.stats-head {
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-4);
+  padding-right: var(--sds-padding-24);
+  border-right: 1px solid var(--sds-border-neutralGrey-light2);
+}
+
+.stats-head h1 {
+  margin: 0;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-body-l-medium-font-size, 16px);
+  font-weight: var(--sds-body-m-medium-font-weight);
+  line-height: var(--sds-body-l-book-line-height, 20px);
+}
+
+.stats-head p {
+  margin: 0;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+.stats-grid {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sds-gap-40);
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-4);
+}
+
+.stat strong {
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-xxs-bold-font-size);
+  font-weight: var(--sds-title-xxs-bold-font-weight);
+  line-height: var(--sds-title-xxs-bold-line-height);
+}
+
+.stat span {
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+/* Conversation card */
+.conversation-card {
+  padding: 0;
+}
+
+.conversation-head {
+  padding: var(--sds-padding-16) var(--sds-padding-20);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+}
+
+.conversation-head h2 {
+  margin: 0;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-xxs-bold-font-size);
+  font-weight: var(--sds-title-xxs-bold-font-weight);
+  line-height: var(--sds-title-xxs-bold-line-height);
+}
+
+.conversation-thread {
+  padding: var(--sds-padding-24) var(--sds-padding-20);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-32);
+}
+
+.run-message {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-8);
+  padding: var(--sds-padding-12);
+  border-radius: var(--sds-border-radius-8);
+  transition: background-color 160ms ease;
+}
+
+.run-message[data-role='user'] {
+  align-items: flex-end;
+}
+
+.run-message[data-role='assistant'] {
+  align-items: flex-start;
+}
+
+/* Selected trace pair (session): highlight the user + assistant turn whose
+   trace is open — mirrors the test screen. */
+.run-message.is-selected-trace-pair {
+  background: var(--sds-bg-neutralBlue-light1);
+}
+
+.message-meta {
+  color: var(--sds-text-neutral-ghost);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+.user-bubble {
+  max-width: 70%;
+  margin: 0;
+  padding: var(--sds-padding-12) var(--sds-padding-16);
+  border-radius: var(--sds-border-radius-8) 0 var(--sds-border-radius-8) var(--sds-border-radius-8);
+  background: var(--sds-themebg-default, #d0ebff);
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-l-book-font-size);
+  font-weight: var(--sds-body-l-book-font-weight);
+  line-height: var(--sds-body-l-book-line-height);
+  white-space: pre-line;
+}
+
+/* Dark mode: the light-blue bubble clashes — use a dark-blue tint + light text. */
+:host-context(.dark) .user-bubble {
+  background: var(--sds-bg-neutralBlue-default);
+  color: var(--sds-text-neutral-title);
+}
+
+.assistant-block {
+  max-width: 85%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-8);
+}
+
+.assistant-block p {
+  margin: 0;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-l-book-font-size);
+  font-weight: var(--sds-body-l-book-font-weight);
+  line-height: var(--sds-body-l-book-line-height);
+  white-space: pre-line;
+}
+
+@media (max-width: 720px) {
+  .run-workspace,
+  .conversation-thread {
+    padding-inline: var(--sds-padding-16);
+  }
+}

@@ -63,10 +63,14 @@
 }
 
 .back-link {
+  padding: 0;
+  border: none;
+  background: transparent;
   color: var(--sds-text-neutral-negative);
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .back-link app-sds-icon {

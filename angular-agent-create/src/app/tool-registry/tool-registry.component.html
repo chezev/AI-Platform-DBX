@@ -1,11 +1,123 @@
-<main class="feature-shell" aria-label="Tool Registry module">
-  <a routerLink="/" class="feature-back">Back to home</a>
+<!-- Tool Registry list. Topbar + product nav + sub-tabs + "Add Tool" CTA come
+     from the shared AppShell. -->
+<div class="page-shell">
+  <section class="tab-panel">
+    <div class="panel-toolbar">
+      <label class="panel-search" sdsSearchField for="tool-search-input">
+        <input
+          id="tool-search-input"
+          type="search"
+          placeholder="Search here"
+          [value]="searchValue()"
+          (input)="onSearchInput($any($event.target).value)"
+        />
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+      </label>
 
-  <section class="feature-card">
-    <p class="feature-eyebrow">Angular module</p>
-    <h1>Tool Registry</h1>
-    <p>
-      Placeholder screen for SDS-based tool catalog, connector metadata, and permission governance.
-    </p>
+      <div class="toolbar-right">
+        <div class="status-filter" sdsSelect [value]="statusFilter()" (valueChange)="onStatusFilterChange($event)">
+          <sds-select-trigger>
+            <span class="select-display-label">{{ currentStatusLabel() }}</span>
+          </sds-select-trigger>
+          <sds-select-content *sdsSelectPortal>
+            @for (option of statusOptions; track option.value) {
+              <sds-select-item [value]="option.value">{{ option.label }}</sds-select-item>
+            }
+          </sds-select-content>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-table-wrap">
+      <table class="data-table" aria-label="Tools">
+        <thead>
+          <tr>
+            <th>Tool Name</th>
+            <th>Status</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Used by</th>
+            <th>Created On</th>
+            <th>Last Updated by</th>
+            <th>Last Updated on</th>
+            <th class="actions-head">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tool of visible(); track trackTool($index, tool)) {
+            <tr>
+              <td><span class="link-name">{{ tool.name }}</span></td>
+              <td>
+                <span class="status-pill" [attr.data-status]="tool.status.toLowerCase()">{{ tool.status }}</span>
+              </td>
+              <td class="desc-cell">{{ tool.description }}</td>
+              <td>{{ tool.type }}</td>
+              <td>{{ usedByLabel(tool) }}</td>
+              <td class="muted-cell">{{ tool.createdOn }}</td>
+              <td class="muted-cell">{{ tool.updatedBy }}</td>
+              <td class="muted-cell">{{ tool.updatedOn }}</td>
+              <td class="actions-cell">
+                <div class="row-menu-anchor">
+                  <button
+                    type="button"
+                    class="row-menu-button"
+                    sdsIconButton
+                    variant="ghost"
+                    size="xs"
+                    aria-label="More actions"
+                    [attr.aria-expanded]="isMenuOpen(tool.id)"
+                    (click)="toggleMenu(tool.id, $event)"
+                  >
+                    <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                  </button>
+
+                  @if (isMenuOpen(tool.id)) {
+                    <div
+                      class="row-action-menu"
+                      role="menu"
+                      aria-label="Tool actions"
+                      [style.top.px]="menuPos()?.top"
+                      [style.right.px]="menuPos()?.right"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <button type="button" class="row-action-item" role="menuitem" (click)="onEdit(tool, $event)">Edit</button>
+                      <button type="button" class="row-action-item is-danger" role="menuitem" (click)="requestDelete(tool, $event)">Delete</button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr class="empty-row">
+              <td colspan="9">No tools match your search.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </section>
-</main>
+
+  @if (pendingDelete(); as tool) {
+    <div class="modal-backdrop" role="presentation" (click)="cancelDelete()">
+      <section
+        class="modal-card"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="tool-delete-title"
+        (click)="$event.stopPropagation()"
+      >
+        <button type="button" class="modal-close" aria-label="Close" (click)="cancelDelete()">
+          <app-sds-icon name="x" [size]="18"></app-sds-icon>
+        </button>
+        <header class="modal-head">
+          <h2 id="tool-delete-title">Delete “{{ tool.name }}”?</h2>
+          <p>This tool will be removed from the registry. Agents using it may stop working. This can’t be undone.</p>
+        </header>
+        <div class="modal-actions">
+          <button type="button" sdsButton variant="secondary" (click)="cancelDelete()">Cancel</button>
+          <button type="button" sdsButton variant="primary" class="danger-confirm" (click)="confirmDelete()">Delete</button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

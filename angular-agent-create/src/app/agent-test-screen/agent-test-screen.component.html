@@ -7,10 +7,10 @@
 
   <nav class="test-subheader" aria-label="Test agent header">
     <div class="test-title">
-      <a routerLink="/agent-creation/create" class="back-link" aria-label="Back to agent configuration">
+      <button type="button" class="back-link" aria-label="Back" (click)="goBack()">
         <app-sds-icon name="arrow-left" [size]="12"></app-sds-icon>
-      </a>
-      <span>Onboarding Agent</span>
+      </button>
+      <span>{{ agentName }}</span>
       <span class="divider">/</span>
       <strong>Test Agent</strong>
     </div>
@@ -22,26 +22,24 @@
     [class.is-trace-expanded]="tracePanelExpanded()"
     aria-label="Test agent workspace"
   >
-    @if (selectedTraceSteps().length > 0) {
-      <app-trace-log-panel
-        class="trace-side-panel"
-        [open]="true"
-        [responseId]="selectedResponseId() ?? ''"
-        [steps]="selectedTraceSteps()"
-        (expandedChange)="onTraceExpandedChange($event)"
-        (closePanel)="closeTrace()"
-      ></app-trace-log-panel>
-    }
+    <app-trace-log-panel
+      class="trace-side-panel"
+      [open]="selectedTraceSteps().length > 0"
+      [responseId]="selectedResponseId() ?? ''"
+      [steps]="selectedTraceSteps()"
+      (expandedChange)="onTraceExpandedChange($event)"
+      (closePanel)="closeTrace()"
+    ></app-trace-log-panel>
 
     <section class="chat-stage" aria-label="Test agent chat">
       <section class="chat-intro" aria-label="Chat intro">
         <img src="assets/icons/sds/agentic-aI-icon-new.png" alt="" />
-        <h1>Chat with Onboarding Agent!</h1>
+        <h1>Chat with {{ agentName }}!</h1>
         <p>Ask anything — the agent will respond with the best answer it can.</p>
       </section>
 
       <div class="chat-column">
-        <section class="chat-thread" aria-label="Conversation">
+        <section #chatThread class="chat-thread" aria-label="Conversation">
           @for (message of messages(); track trackMessage($index, message)) {
             <article
               class="chat-message"
@@ -64,14 +62,27 @@
           }
         </section>
 
-        <form class="chat-composer" aria-label="Send test prompt" (submit)="$event.preventDefault(); sendMessage()">
+        <div class="composer-dock">
+          @if (suggestions().length) {
+            <div class="chat-suggestions" aria-label="Suggested prompts">
+              <span class="suggestions-label">Suggested</span>
+              @for (turn of suggestions(); track turn.index) {
+                <button type="button" class="suggestion-chip" (click)="sendSuggestion(turn)">
+                  {{ turn.prompt }}
+                </button>
+              }
+            </div>
+          }
+
+          <form class="chat-composer" aria-label="Send test prompt" (submit)="$event.preventDefault(); sendMessage()">
           <textarea
             name="agentPrompt"
             rows="2"
             [ngModel]="composerText()"
             (ngModelChange)="composerText.set($event)"
             (keydown)="onComposerKeydown($event)"
-            aria-label="Message Onboarding Agent"
+            placeholder="Ask {{ agentName }} anything, or tap a suggestion above"
+            [attr.aria-label]="'Message ' + agentName"
           ></textarea>
           <div class="composer-actions">
             <button type="button" class="composer-icon" aria-label="Attach file">
@@ -81,7 +92,8 @@
               <app-sds-icon name="send" [size]="28"></app-sds-icon>
             </button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </section>
   </main>

@@ -1,0 +1,15 @@
+# Netlify config for the Angular app (angular-agent-create) in this monorepo.
+[build]
+  base = "angular-agent-create"
+  command = "npm run build"
+  publish = "dist/angular-agent-create/browser"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# SPA fallback for Angular client-side routes. Existing static files (incl. the
+# embedded /agentic-flows/ app) are served first; only unknown paths hit index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -35,6 +35,17 @@
   font-weight: var(--sds-body-s-medium-font-weight);
 }
 
+/* Dark mode: the always-dark band turns pure black via the primary token —
+   match the topbar/card surface instead and lighten the current crumb. */
+:host-context(.dark) .detail-subheader {
+  background: var(--sds-bg-neutralWhite-default);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+}
+
+:host-context(.dark) .detail-subheader strong {
+  color: var(--sds-text-neutral-title);
+}
+
 .detail-workspace {
   padding: var(--sds-padding-20) var(--sds-padding-24) var(--sds-padding-32);
 }
@@ -117,7 +128,7 @@
 
 .detail-tabs {
   height: 58px;
-  margin-top: var(--sds-gap-16);
+  margin-top: var(--sds-gap-4);
   border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
   display: flex;
   align-items: flex-end;
@@ -171,7 +182,15 @@
 
 .capability-grid {
   display: grid;
-  gap: var(--sds-gap-24) calc(var(--sds-gap-32) + var(--sds-gap-32));
+  gap: var(--sds-gap-16);
+}
+
+/* Each capability shown as its own block/card (was bare label/value text). */
+.capability-card {
+  padding: var(--sds-padding-12) var(--sds-padding-16);
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
 }
 
 .field {
@@ -304,4 +323,383 @@
   .summary-meta {
     flex-direction: column;
   }
+}
+
+/* ── Logs & Versions tables (created agents only) ─────────────────────── */
+.table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sds-gap-16);
+  padding: var(--sds-padding-16) var(--sds-padding-20);
+}
+
+.table-title {
+  margin: 0;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-xxs-bold-font-size);
+  font-weight: var(--sds-title-xxs-bold-font-weight);
+  line-height: var(--sds-title-xxs-bold-line-height);
+}
+
+.table-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-12);
+}
+
+/* common sdsSelect component supplies its own bordered trigger + chevron */
+.control-select {
+  --sds-select-width: 180px;
+}
+
+/* common sdsSearchField directive supplies the border, icon layout, and focus ring */
+.control-search {
+  width: 240px;
+}
+
+.data-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  text-align: left;
+  padding: var(--sds-padding-12) var(--sds-padding-20);
+  background: var(--sds-bg-neutralBlue-light1);
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-body-s-medium-font-size);
+  font-weight: var(--sds-body-s-medium-font-weight);
+  line-height: var(--sds-body-s-medium-line-height);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: var(--sds-padding-16) var(--sds-padding-20);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+  color: var(--sds-text-neutral-body);
+  font-size: var(--sds-body-m-book-font-size);
+  font-weight: var(--sds-body-m-book-font-weight);
+  line-height: var(--sds-body-m-book-line-height);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cell-muted {
+  color: var(--sds-text-neutral-label);
+  white-space: nowrap;
+}
+
+.cell-input {
+  min-width: 220px;
+}
+
+.cell-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--sds-text-neutral-title);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Run ID / version read as a link only on row hover (Session ID keeps its pill). */
+.data-table tbody tr:hover .cell-link {
+  color: var(--sds-bg-neutralBlue-active);
+}
+
+.cell-link:hover,
+.cell-link:focus-visible {
+  outline: none;
+  color: var(--sds-bg-neutralBlue-active);
+  text-decoration: underline;
+}
+
+.cell-chip-link {
+  border: none;
+  border-radius: var(--sds-border-radius-full);
+  background: var(--sds-bg-neutralBlue-light1);
+  padding: var(--sds-padding-4) var(--sds-padding-12);
+  color: var(--sds-bg-neutralBlue-active);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cell-chip-link:hover,
+.cell-chip-link:focus-visible {
+  outline: none;
+  background: var(--sds-bg-neutralBlue-default);
+}
+
+/* Status pills — outlined (full border) chips. Success is tertiary: a plain
+   neutral outline (de-emphasized, it's the expected state). Error/Cancelled/
+   Running carry a semantic border so exceptions stand out. */
+.status-pill {
+  min-height: var(--sds-size-24);
+  padding: 0 var(--sds-padding-8);
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-4);
+  background: var(--sds-bg-neutralWhite-default);
+  display: inline-flex;
+  align-items: center;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  font-weight: var(--sds-body-s-book-font-weight);
+  line-height: var(--sds-body-s-book-line-height);
+  white-space: nowrap;
+}
+
+.status-pill[data-status='Error'] {
+  border-color: var(--sds-border-feedback-errorHigh);
+  color: var(--sds-text-feedback-error);
+}
+
+.status-pill[data-status='Cancelled'] {
+  border-color: var(--sds-bg-feedback-warningHigh);
+}
+
+.status-pill[data-status='Running'] {
+  border-color: var(--sds-bg-feedback-infoMid);
+}
+
+/* Versions */
+.version-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-8);
+}
+
+.current-badge {
+  padding: var(--sds-padding-4) var(--sds-padding-8);
+  border-radius: var(--sds-border-radius-4);
+  background: var(--sds-bg-neutralBlue-light1);
+  color: var(--sds-bg-neutralBlue-active);
+  font-size: var(--sds-caption-medium-font-size);
+  font-weight: var(--sds-caption-medium-font-weight);
+  line-height: var(--sds-caption-medium-line-height);
+}
+
+.actions-head {
+  text-align: right;
+}
+
+.actions-cell {
+  text-align: right;
+}
+
+.row-menu-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.card-menu-button {
+  border: none;
+  background: transparent;
+  color: var(--sds-text-neutral-ghost);
+  width: var(--sds-size-24);
+  height: var(--sds-size-24);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--sds-border-radius-4);
+  cursor: pointer;
+}
+
+.card-menu-button:hover {
+  background: var(--sds-bg-neutralGrey-light2);
+}
+
+.card-menu-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sds-bg-neutralBlue-default);
+}
+
+.card-action-menu {
+  position: absolute;
+  top: calc(100% + var(--sds-gap-4));
+  right: 0;
+  min-width: 128px;
+  padding: var(--sds-padding-8) 0;
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
+  box-shadow: var(--sds-shadow-dropdown);
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+
+.card-action-item {
+  min-height: var(--sds-size-32);
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0 var(--sds-padding-12);
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-body-m-book-font-size);
+  font-weight: var(--sds-body-m-book-font-weight);
+  line-height: var(--sds-body-m-book-line-height);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.card-action-item:hover {
+  background: var(--sds-bg-neutralGrey-light2);
+}
+
+/* Footer / pagination */
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sds-gap-16);
+  padding: var(--sds-padding-12) var(--sds-padding-20);
+  border-top: 1px solid var(--sds-border-neutralGrey-light2);
+}
+
+.footer-summary {
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+.footer-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-4);
+}
+
+.page-link {
+  min-width: var(--sds-size-32);
+  height: var(--sds-size-32);
+  padding: 0 var(--sds-padding-8);
+  border: none;
+  border-radius: var(--sds-border-radius-4);
+  background: transparent;
+  color: var(--sds-text-neutral-label);
+  font: inherit;
+  font-size: var(--sds-body-s-book-font-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.page-link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.perpage-select {
+  --sds-select-width: 132px;
+  display: inline-flex;
+}
+
+.page-link:hover {
+  background: var(--sds-bg-neutralGrey-light2);
+}
+
+.page-link.is-active {
+  background: var(--sds-bg-neutralGrey-light2);
+  color: var(--sds-text-neutral-title);
+  font-weight: var(--sds-body-m-medium-font-weight);
+}
+
+.page-gap {
+  color: var(--sds-text-neutral-ghost);
+  padding: 0 var(--sds-padding-4);
+}
+
+.footer-perpage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-4);
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+/* ── Created-agent header: V12 badge + Active toggle + Test/Edit ── */
+.summary-content h1 {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-8);
+}
+
+.version-badge {
+  padding: var(--sds-padding-2, 2px) var(--sds-padding-8);
+  border-radius: var(--sds-border-radius-4);
+  background: var(--sds-bg-neutralBlue-light1);
+  color: var(--sds-bg-neutralBlue-active);
+  font-size: var(--sds-caption-medium-font-size);
+  font-weight: var(--sds-caption-medium-font-weight);
+  line-height: var(--sds-caption-medium-line-height);
+}
+
+.summary-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-16);
+}
+
+.active-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-8);
+  cursor: pointer;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-body-m-book-font-size);
+  line-height: var(--sds-body-m-book-line-height);
+}
+
+.active-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.active-toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: var(--sds-border-radius-full);
+  background: var(--sds-bg-neutralGrey-readOnly, #a6a6a6);
+  transition: background-color 160ms ease;
+  flex-shrink: 0;
+}
+
+.active-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--sds-border-radius-full);
+  background: var(--sds-bg-neutralWhite-default);
+  transition: transform 160ms ease;
+}
+
+.active-toggle input:checked + .active-toggle-track {
+  background: var(--sds-bg-neutralBlue-active);
+}
+
+.active-toggle input:checked + .active-toggle-track::after {
+  transform: translateX(16px);
 }

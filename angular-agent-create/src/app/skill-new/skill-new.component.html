@@ -1,0 +1,232 @@
+<div class="skill-new">
+  <app-sds-topbar searchId="skill-new-global-search" [searchValue]="globalSearch()" (searchValueChange)="globalSearch.set($event)"></app-sds-topbar>
+
+  <nav class="sn-subheader" aria-label="Create skill header">
+    <div class="sn-subheader-left">
+      @if (step() === 'editor') {
+        <span class="sn-crumb"><a (click)="goBack()">Create Skill</a> <span class="crumb-sep">/</span> <strong>{{ skillName() }}</strong></span>
+      } @else {
+        <button type="button" class="back-btn" aria-label="Back" (click)="goBack()"><app-sds-icon name="arrow-left" [size]="14"></app-sds-icon></button>
+        <span class="sn-title">Create Skill</span>
+      }
+    </div>
+    <div class="sn-subheader-right">
+      <button type="button" sdsButton variant="inverse-secondary" (click)="cancel()">Cancel</button>
+      @if (step() === 'editor') {
+        <button type="button" sdsButton variant="inverse-primary" (click)="save()">Save</button>
+      }
+      <button type="button" class="kebab-btn" aria-label="More"><app-sds-icon name="kebab" [size]="16"></app-sds-icon></button>
+    </div>
+  </nav>
+
+  @if (step() === 'select') {
+    <div class="sn-select">
+      <div class="methods-row">
+        <button type="button" class="method-card" [class.is-selected]="method() === 'ai'" (click)="selectMethod('ai')">
+          <span class="method-icon"><app-sds-icon name="sparkles" [size]="20"></app-sds-icon></span>
+          <span class="method-text">
+            <strong>Generate with AI</strong>
+            <small>Describe what your skill should do and let AI create the complete SKILL.md for you</small>
+          </span>
+        </button>
+        <button type="button" class="method-card" [class.is-selected]="method() === 'upload'" (click)="selectMethod('upload')">
+          <span class="method-icon"><app-sds-icon name="file-text" [size]="20"></app-sds-icon></span>
+          <span class="method-text">
+            <strong>Upload Skill.md / PPTX</strong>
+            <small>Already have a skill/PPTX file? Upload it and we'll parse the metadata</small>
+          </span>
+        </button>
+        <button type="button" class="method-card" [class.is-selected]="method() === 'manual'" (click)="selectMethod('manual')">
+          <span class="method-icon"><app-sds-icon name="layout-template" [size]="20"></app-sds-icon></span>
+          <span class="method-text">
+            <strong>Create Manually</strong>
+            <small>Fill out the form yourself with full control over every field</small>
+          </span>
+        </button>
+      </div>
+
+      <div class="method-panel">
+        @if (method() === 'ai') {
+          <div class="ai-panel">
+            <h1>What should your skill do ?</h1>
+            <p class="ai-sub">Describe the skill's purpose and AI will generate the complete SKILL.md</p>
+            <textarea class="ai-prompt" rows="5" placeholder="Example: Create a skill that helps CSMs analyze client adoption metrics for Darwinbox modules. It should fetch adoption data, compare against benchmarks, and recommend actions to improve usage…" [value]="prompt()" (input)="prompt.set($any($event.target).value)"></textarea>
+            <div class="ai-chips">
+              @for (chip of aiChips; track chip) {
+                <button type="button" class="ai-chip" (click)="useChip(chip)">{{ chip }}</button>
+              }
+            </div>
+            <button type="button" sdsButton variant="primary" class="generate-btn" [disabled]="!canGenerate()" (click)="generate()">
+              <app-sds-icon name="sparkles" [size]="16"></app-sds-icon>
+              Generate Skill
+            </button>
+          </div>
+        } @else if (method() === 'upload') {
+          <div class="upload-panel">
+            <div class="upload-toggle">
+              <button type="button" class="ut-tab" [class.is-active]="uploadMode() === 'md'" (click)="uploadMode.set('md')">Upload Skill.md</button>
+              <button type="button" class="ut-tab" [class.is-active]="uploadMode() === 'pptx'" (click)="uploadMode.set('pptx')">Extract from PPTX</button>
+            </div>
+            <h1>{{ uploadMode() === 'md' ? 'Upload Skill.md' : 'Extract from PPTX' }}</h1>
+            <p class="ai-sub">{{ uploadMode() === 'md' ? "Upload your existing skill file and we'll parse the metadata" : "Upload a PPTX deck and we'll extract a brand profile and create the skill" }}</p>
+            <label class="drop-zone">
+              <input type="file" hidden (change)="onSkillFile($event)" />
+              <span class="drop-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 21h14"/></svg></span>
+              <span class="drop-title">Drag and drop to upload or <span class="browse-link">Browse Files</span></span>
+              <span class="drop-hint">{{ uploadMode() === 'md' ? 'Supporting format: .md, .skill, .zip' : 'Supporting format: .pptx' }}</span>
+            </label>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (step() === 'thinking') {
+    <div class="sn-thinking">
+      <div class="thinking-card">
+        <div class="thinking-row">
+          <span class="thinking-label">{{ method() === 'upload' ? 'Extracting your deck' : 'Analysing your request' }}</span>
+          <span class="thinking-pct">{{ thinkingProgress() | number: '1.0-0' }}%</span>
+        </div>
+        <div class="thinking-bar"><span class="thinking-bar-fill" [style.width.%]="thinkingProgress()"></span></div>
+        <div class="thinking-detail">
+          <app-sds-icon name="sparkles" [size]="16"></app-sds-icon>
+          {{ thinkingLabel() }}
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- ══ Editor ══ -->
+    <div class="sn-editor" [class.has-assist]="aiAssistOpen()">
+      @if (aiAssistOpen()) {
+        <aside class="ai-assist">
+          <header class="assist-head">
+            <span class="assist-title"><app-sds-icon name="sparkles" [size]="16"></app-sds-icon> AI Assist</span>
+            <button type="button" class="assist-close" aria-label="Close" (click)="aiAssistOpen.set(false)"><app-sds-icon name="x" [size]="16"></app-sds-icon></button>
+          </header>
+          <div class="assist-body">
+            <div class="assist-bubble">
+              Create a skill that helps CSMs analyze client adoption metrics for Darwinbox modules.
+              <br /><br />
+              It should fetch adoption data from slim_clients.csv and slim_metrics.csv, compare against industry benchmarks, identify underperforming modules, and recommend specific actions to improve client usage and reduce churn risk.
+            </div>
+            <p class="assist-summary">I've created "{{ displayName() || 'Adoption agent' }}" based on your requirement. Here's what I included:</p>
+            <ul class="assist-list">
+              <li>Display name: {{ displayName() }}</li>
+              <li>Category: Analytics</li>
+              <li>Instructions with 3 steps for CSM's</li>
+            </ul>
+            <p class="assist-hint">[Type to refine…]</p>
+          </div>
+          <div class="assist-composer">
+            <input type="text" placeholder="Type here" [value]="assistInput()" (input)="assistInput.set($any($event.target).value)" />
+            <button type="button" class="assist-send" aria-label="Send"><app-sds-icon name="arrow-right" [size]="16"></app-sds-icon></button>
+          </div>
+        </aside>
+      }
+
+      <main class="editor-scroll">
+        <section class="editor-card">
+          <div class="field-row">
+            <div class="field">
+              <label for="sk-name">Display name <span class="req">*</span></label>
+              <input id="sk-name" sdsInput type="text" placeholder="Enter here" [value]="displayName()" (input)="displayName.set($any($event.target).value)" />
+            </div>
+            <div class="field">
+              <label for="sk-slug">Slug</label>
+              <input id="sk-slug" sdsInput type="text" placeholder="Auto-generated" [value]="slug()" (input)="slug.set($any($event.target).value)" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="sk-desc">Description (When to use) <span class="req">*</span></label>
+            <textarea id="sk-desc" sdsTextarea rows="3" placeholder="Use this skill when user asks about client adoption levels, module usage…" [value]="description()" (input)="description.set($any($event.target).value)"></textarea>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="sk-cat">Category <span class="req">*</span> <app-sds-icon class="info-i" name="info" [size]="14"></app-sds-icon></label>
+              <div class="select-box">
+                <span>{{ category() || 'Select' }}</span>
+                <app-sds-icon name="chevron-down" [size]="16"></app-sds-icon>
+              </div>
+            </div>
+            <div class="field">
+              <label>Tags</label>
+              <div class="tags-box">
+                @for (tag of tags(); track tag) {
+                  <span class="tag-pill">{{ tag }} <button type="button" aria-label="Remove" (click)="removeTag(tag)"><app-sds-icon name="x" [size]="12"></app-sds-icon></button></span>
+                }
+                @if (!tags().length) { <span class="tags-placeholder">Enter comma separated key words…</span> }
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="sk-inst">Instructions (Markdown)</label>
+            <textarea id="sk-inst" class="instructions" rows="10" placeholder="# Skill Name&#10;&#10;## Purpose&#10;What this skill does…&#10;&#10;## Instructions&#10;Step-by-step guide…" [value]="instructions()" (input)="instructions.set($any($event.target).value)"></textarea>
+          </div>
+
+          @if (hasBrand()) {
+            <section class="brand-section">
+              <h3 class="brand-title"><app-sds-icon name="sparkles" [size]="18"></app-sds-icon> Brand Profile <span class="brand-ready">Ready</span></h3>
+              <div class="brand-colors">
+                @for (c of brandColors(); track $index) {
+                  <span class="brand-color"><span class="swatch" [style.background]="c.hex"></span> {{ c.name }} <span class="hex">{{ c.hex }}</span></span>
+                }
+              </div>
+              <div class="brand-type">
+                <span><strong>Font</strong> Inter</span>
+                <span><strong>Heading</strong> 32px</span>
+                <span><strong>Sub Heading</strong> 24px</span>
+                <span><strong>Body</strong> 14px</span>
+              </div>
+              <label class="brand-default">
+                <input type="checkbox" [checked]="brandDefault()" (change)="brandDefault.set($any($event.target).checked)" />
+                <span>
+                  Default brand profile for this deployment
+                  <small>When set as default, all other profiles are cleared as default. Used by the slides generator for branding.</small>
+                </span>
+              </label>
+              <div class="brand-json-head">
+                <strong>Profile data (JSON)</strong>
+                <button type="button" sdsButton variant="secondary">Edit</button>
+              </div>
+              <pre class="json-block">{{ brandJson() }}</pre>
+            </section>
+          } @else {
+            <section class="packaged-section">
+              <div class="packaged-files">
+                <h3 class="packaged-title">Packaged Files</h3>
+                @if (referenceFiles().length) {
+                  <p class="file-group-label">Reference</p>
+                  @for (f of referenceFiles(); track f.path) {
+                    <button type="button" class="file-item" [class.is-active]="activeFilePath() === f.path" (click)="selectFile(f.path)">{{ f.path }}</button>
+                  }
+                }
+                @if (schemaFiles().length) {
+                  <p class="file-group-label">Schema</p>
+                  @for (f of schemaFiles(); track f.path) {
+                    <button type="button" class="file-item" [class.is-active]="activeFilePath() === f.path" (click)="selectFile(f.path)">{{ f.path }}</button>
+                  }
+                }
+                @if (!files().length) { <p class="file-empty">No packaged files yet.</p> }
+              </div>
+              @if (activeFile(); as f) {
+                <div class="file-viewer">
+                  <div class="file-viewer-head">
+                    <span>{{ f.path }}</span>
+                    <button type="button" class="switch" [class.is-on]="fileEnabled()" role="switch" [attr.aria-checked]="fileEnabled()" (click)="fileEnabled.set(!fileEnabled())"><span class="switch-knob"></span></button>
+                  </div>
+                  <pre class="json-block">{{ f.content }}</pre>
+                </div>
+              }
+            </section>
+          }
+        </section>
+      </main>
+
+      @if (!aiAssistOpen()) {
+        <button type="button" class="assist-fab" aria-label="Open AI Assist" (click)="toggleAiAssist()"><app-sds-icon name="sparkles" [size]="20"></app-sds-icon></button>
+      }
+    </div>
+  }
+</div>

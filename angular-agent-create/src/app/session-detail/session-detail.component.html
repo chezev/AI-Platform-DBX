@@ -1,0 +1,83 @@
+<div class="run-shell">
+  <app-sds-topbar searchId="session-detail-search"></app-sds-topbar>
+
+  <nav class="run-subheader" aria-label="Session breadcrumb">
+    <a routerLink="/agent-creation/template/product-adoption" [queryParams]="{ source: 'existing', name: agentName }">{{ agentName }}</a>
+    <span class="divider">/</span>
+    <a routerLink="/agent-creation/template/product-adoption" [queryParams]="{ source: 'existing', name: agentName, tab: 'logs' }">Logs</a>
+    <span class="divider">/</span>
+    <strong>{{ sessionId | slice: 0:10 }}…</strong>
+  </nav>
+
+  <main
+    class="run-workspace"
+    [class.has-trace]="selectedTraceSteps().length > 0"
+    [class.is-trace-expanded]="tracePanelExpanded()"
+  >
+    @if (selectedTraceSteps().length > 0) {
+      <aside class="run-trace-panel">
+        <app-trace-log-panel
+          [open]="true"
+          [responseId]="selectedResponseId() ?? ''"
+          [steps]="selectedTraceSteps()"
+          (expandedChange)="onTraceExpandedChange($event)"
+          (closePanel)="closeTrace()"
+        ></app-trace-log-panel>
+      </aside>
+    }
+
+    <section class="run-content" aria-label="Session detail">
+      <section class="stats-card" aria-label="Session summary">
+        <div class="stats-head">
+          <h1>Session: {{ sessionId | slice: 0:10 }}…</h1>
+          <p>{{ sessionMeta }}</p>
+        </div>
+        <div class="stats-grid">
+          @for (stat of stats; track stat.label) {
+            <div class="stat">
+              <strong>{{ stat.value }}</strong>
+              <span>{{ stat.label }}</span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="conversation-card" aria-label="Conversation">
+        <header class="conversation-head">
+          <h2>Conversation</h2>
+        </header>
+
+        <div class="conversation-thread">
+          @for (message of messages; track trackMessage($index, message)) {
+            <article
+              class="run-message"
+              [attr.data-role]="message.role"
+              [class.is-selected-trace-pair]="isTracePairSelected($index, message)"
+            >
+              <div class="message-meta">
+                @if (message.role === 'user') {
+                  <span>User · {{ message.time }}</span>
+                } @else {
+                  <span>Assistant · {{ message.time }} · {{ message.tokens }} tokens · {{ message.cost }}</span>
+                }
+              </div>
+
+              @if (message.role === 'user') {
+                <p class="user-bubble">{{ message.text }}</p>
+              } @else {
+                <div class="assistant-block">
+                  <p>{{ message.text }}</p>
+                  <app-chat-trace-link
+                    [responseId]="message.id"
+                    [steps]="message.traceSteps ?? []"
+                    (openTrace)="openTrace($event)"
+                  ></app-chat-trace-link>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    </section>
+  </main>
+</div>

@@ -14,6 +14,10 @@ export interface AgentSummary {
   updatedBy?: string;
   updatedLabel: string;
   accent: 'red' | 'blue' | 'teal' | 'orange' | 'purple' | 'gray';
+  /** Deco-icon asset key (file in assets/icons/agents/<icon>.svg). */
+  icon?: string;
+  /** Lifetime session count shown on the card / list. */
+  sessions?: number;
 }
 
 export interface AgentListQuery {

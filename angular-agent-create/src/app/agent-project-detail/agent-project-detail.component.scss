@@ -1,0 +1,431 @@
+:host {
+  display: block;
+  background: var(--sds-bg-neutralGrey-light2);
+  color: var(--sds-text-neutral-body);
+  font-family: 'Darwin Sans', 'Segoe UI', sans-serif;
+}
+
+/* ── Header ── */
+.detail-header {
+  background: var(--sds-bg-neutralWhite-default);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+  padding: var(--sds-padding-16) var(--sds-padding-24) var(--sds-padding-24);
+}
+
+.crumb-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-folder {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.project-folder svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.detail-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-8);
+  font-size: var(--sds-title-xxs-medium-font-size);
+  line-height: var(--sds-title-xxs-medium-line-height);
+}
+
+.detail-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-4);
+  color: var(--sds-text-neutral-label);
+  text-decoration: none;
+}
+
+.detail-breadcrumb a:hover {
+  color: var(--sds-bg-neutralBlue-active);
+}
+
+.detail-breadcrumb .crumb-sep {
+  color: var(--sds-text-neutral-ghost);
+}
+
+.detail-breadcrumb strong {
+  color: var(--sds-text-neutral-title);
+  font-weight: var(--sds-title-xxs-bold-font-weight);
+}
+
+.detail-desc {
+  margin: var(--sds-gap-8) 0 0;
+  max-width: 880px;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-m-book-font-size);
+  line-height: var(--sds-body-m-book-line-height);
+  /* Truncate long descriptions to two lines. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Panel + toolbar ── */
+.tab-panel {
+  background: var(--sds-bg-neutralWhite-default);
+}
+
+.panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sds-gap-16);
+  padding: var(--sds-padding-16) var(--sds-padding-24);
+}
+
+.panel-search {
+  width: min(320px, 100%);
+  border-radius: var(--sds-border-radius-4);
+}
+
+.panel-search input {
+  font-family: inherit;
+}
+
+.panel-search input::placeholder {
+  color: var(--sds-text-neutral-ghost);
+}
+
+.panel-search input:focus {
+  outline: none;
+}
+
+.type-filter-select {
+  --sds-select-width: 200px;
+  display: inline-flex;
+}
+
+.select-display-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Table ── */
+/* No clipping here, so the row action menu can overflow the table bounds. */
+.resource-table-wrap {
+  width: 100%;
+}
+
+.resource-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: var(--sds-bg-neutralWhite-default);
+}
+
+.resource-table th {
+  height: 40px;
+  padding: 0 var(--sds-padding-24);
+  background: var(--sds-bg-neutralBlue-light1);
+  border-top: 1px solid var(--sds-border-neutralGrey-light2);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+  color: var(--sds-text-neutral-label);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: inherit;
+  font-size: var(--sds-body-s-medium-font-size);
+  font-weight: var(--sds-body-s-medium-font-weight);
+  line-height: var(--sds-body-s-medium-line-height);
+}
+
+.resource-table td {
+  height: 56px;
+  padding: 0 var(--sds-padding-24);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+  color: var(--sds-text-neutral-body);
+  font-family: inherit;
+  font-size: var(--sds-body-m-book-font-size);
+  line-height: var(--sds-body-m-book-line-height);
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-row {
+  cursor: pointer;
+}
+
+.resource-table tbody tr:hover td {
+  background: var(--sds-bg-neutralGrey-light1);
+}
+
+/* Name is the click target — highlight it as a link on row hover/focus. */
+.resource-table tbody tr:hover .name-cell,
+.resource-table tbody tr:focus-visible .name-cell {
+  color: var(--sds-bg-neutralBlue-active);
+}
+
+.resource-table tbody tr:focus-visible {
+  outline: none;
+}
+
+.resource-table tbody tr:focus-visible td {
+  background: var(--sds-bg-neutralBlue-light1);
+}
+
+.resource-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.name-cell {
+  color: var(--sds-text-neutral-title);
+  font-weight: var(--sds-body-m-medium-font-weight);
+}
+
+.muted-cell {
+  color: var(--sds-text-neutral-label);
+}
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 var(--sds-padding-8);
+  border-radius: var(--sds-border-radius-4);
+  background: var(--sds-bg-neutralGrey-light2);
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+  white-space: nowrap;
+}
+
+.type-badge[data-type='Agent'] {
+  background: var(--sds-bg-neutralBlue-light1);
+  color: var(--sds-text-neutral-title);
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: normal;
+}
+
+.person-name {
+  color: var(--sds-text-neutral-body);
+}
+
+.person-id {
+  color: var(--sds-text-neutral-ghost);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+.empty-row td {
+  text-align: center;
+  color: var(--sds-text-neutral-label);
+  padding: var(--sds-padding-24);
+}
+
+/* Column widths */
+.resource-table th:nth-child(1),
+.resource-table td:nth-child(1) {
+  width: 28%;
+}
+
+.resource-table th:nth-child(2),
+.resource-table td:nth-child(2) {
+  width: 16%;
+}
+
+.resource-table th:nth-child(3),
+.resource-table td:nth-child(3) {
+  width: 17%;
+}
+
+.resource-table th:nth-child(4),
+.resource-table td:nth-child(4) {
+  width: 17%;
+}
+
+.resource-table th:nth-child(5),
+.resource-table td:nth-child(5) {
+  width: 16%;
+}
+
+.resource-table .actions-head,
+.resource-table .actions-cell {
+  width: 6%;
+  min-width: 56px;
+}
+
+.actions-cell {
+  position: relative;
+  overflow: visible;
+}
+
+/* Lift the open row's actions cell (a positioned stacking context) above the
+   following rows so its action menu isn't painted over. z-index on <tr> is
+   unreliable in tables, so we raise the cell instead. */
+.resource-table tbody tr.is-menu-open .actions-cell {
+  z-index: 30;
+}
+
+.row-menu-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.row-menu-button {
+  border: none;
+  background: transparent;
+  color: var(--sds-text-neutral-ghost);
+  cursor: pointer;
+}
+
+.row-action-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 132px;
+  padding: var(--sds-padding-8) 0;
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
+  box-shadow: var(--sds-shadow-dropdown);
+}
+
+.row-action-item {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0 var(--sds-padding-12);
+  color: var(--sds-text-neutral-title);
+  font-family: inherit;
+  font-size: var(--sds-body-m-book-font-size);
+  line-height: var(--sds-body-m-book-line-height);
+  cursor: pointer;
+}
+
+.row-action-item:hover {
+  background: var(--sds-bg-neutralGrey-light2);
+}
+
+.row-action-item.is-danger {
+  color: var(--sds-text-feedback-error);
+}
+
+/* ── Not found ── */
+.not-found {
+  margin: var(--sds-padding-24);
+  padding: var(--sds-padding-24);
+  background: var(--sds-bg-neutralWhite-default);
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+}
+
+.not-found h1 {
+  margin: 0 0 var(--sds-gap-8);
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-xxs-bold-font-size);
+  font-weight: var(--sds-title-xxs-bold-font-weight);
+}
+
+.not-found p {
+  margin: 0 0 var(--sds-gap-16);
+  color: var(--sds-text-neutral-label);
+}
+
+/* ── Delete confirm dialog ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--sds-bg-overlay-blanket);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sds-padding-24);
+}
+
+.modal-card {
+  width: min(460px, calc(100vw - var(--sds-padding-24) - var(--sds-padding-24)));
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
+  box-shadow: var(--sds-shadow-dialog);
+  padding: var(--sds-padding-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-20);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--sds-padding-16);
+  right: var(--sds-padding-16);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--sds-border-radius-4);
+  background: transparent;
+  color: var(--sds-text-neutral-label);
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: var(--sds-bg-neutralGrey-light2);
+  color: var(--sds-text-neutral-title);
+}
+
+.modal-head {
+  padding-right: var(--sds-padding-32);
+}
+
+.modal-head h2 {
+  margin: 0;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-xxs-bold-font-size);
+  font-weight: var(--sds-title-xxs-bold-font-weight);
+  line-height: var(--sds-title-xxs-bold-line-height);
+}
+
+.modal-head p {
+  margin: var(--sds-gap-8) 0 0;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-m-book-font-size);
+  line-height: var(--sds-body-m-book-line-height);
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sds-gap-8);
+}
+
+.modal-actions .danger-confirm {
+  background: var(--sds-bg-feedback-errorHigh) !important;
+  border-color: var(--sds-bg-feedback-errorHigh) !important;
+}
+
+@media (max-width: 1180px) {
+  .resource-table-wrap {
+    overflow-x: auto;
+  }
+
+  .resource-table {
+    min-width: 860px;
+  }
+}

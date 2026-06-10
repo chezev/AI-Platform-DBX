@@ -1,0 +1,488 @@
+<div class="kb-detail">
+  <app-sds-topbar
+    searchId="kb-detail-global-search"
+    [searchValue]="globalSearch()"
+    (searchValueChange)="globalSearch.set($event)"
+  ></app-sds-topbar>
+
+  <nav class="kb-subheader" aria-label="Knowledge base header">
+    <div class="kb-subheader-left">
+      <button type="button" class="back-btn" aria-label="Back" (click)="goBack()">
+        <app-sds-icon name="arrow-left" [size]="14"></app-sds-icon>
+      </button>
+      <span class="kb-name">{{ kb()?.name ?? 'Knowledge Base' }}</span>
+      <button type="button" class="edit-name" aria-label="Edit name">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      </button>
+    </div>
+    <div class="kb-subheader-right">
+      <button type="button" sdsButton variant="inverse-secondary" (click)="exit()">Cancel</button>
+      <button type="button" sdsButton variant="inverse-primary" (click)="exit()">Save</button>
+    </div>
+  </nav>
+
+  <div class="kb-body">
+    <aside class="kb-sidebar" aria-label="Data sources">
+      <div class="sidebar-head">
+        <h2>Data Sources</h2>
+        <div class="sidebar-head-actions">
+          <button type="button" class="bordered-btn" (click)="openConnectorModal($event)">
+            <app-sds-icon name="add" [size]="14"></app-sds-icon>
+            New
+          </button>
+          <div class="sidebar-kebab-anchor">
+            <button type="button" class="bordered-btn icon-only" aria-label="Source options" (click)="toggleSidebarKebab($event)">
+              <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+            </button>
+            @if (sidebarKebabOpen()) {
+              <div class="sidebar-kebab-menu" role="menu" (click)="$event.stopPropagation()">
+                <button type="button" class="row-action-item" role="menuitem" (click)="syncAll()">Sync all</button>
+                <button type="button" class="row-action-item is-danger" role="menuitem" (click)="deleteAllInSource()">Delete all</button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <label class="sidebar-search" sdsSearchField for="kb-source-search">
+        <input id="kb-source-search" type="search" placeholder="Search here" />
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+      </label>
+
+      <nav class="source-tree" aria-label="Sources">
+        @for (source of sources(); track source.id) {
+          <div class="source-group">
+            @if (source.kind === 'local') {
+              <app-sds-icon name="database" [size]="16"></app-sds-icon>
+            } @else {
+              <img class="source-logo" [src]="source.logo" [alt]="source.name" />
+            }
+            {{ source.name }}
+          </div>
+          @for (child of source.children; track child.id) {
+            <button type="button" class="source-item" [class.is-active]="selectedChildId() === child.id" (click)="selectChild(child.id)">
+              <span class="source-item-name">{{ child.name }}</span>
+              @if (source.kind === 'connector') {
+                <span class="source-item-meta">{{ child.tokens }} tokens · {{ child.chunks }} chunks</span>
+              }
+            </button>
+          }
+        }
+      </nav>
+    </aside>
+
+    <main class="kb-main">
+      @if (isUploadView()) {
+        <!-- Upload / documents view -->
+        <div class="main-toolbar">
+          <label class="main-search" sdsSearchField for="kb-doc-search">
+            <input id="kb-doc-search" type="search" placeholder="Search here" [value]="searchValue()" (input)="onSearchInput($any($event.target).value)" />
+            <app-sds-icon name="search" [size]="16"></app-sds-icon>
+          </label>
+
+          <div class="main-toolbar-right">
+            <div class="type-filter" sdsSelect [value]="typeFilter()" (valueChange)="onTypeFilterChange($event)">
+              <sds-select-trigger><span class="select-display-label">{{ typeFilter() === 'All' ? 'Select' : typeFilter() }}</span></sds-select-trigger>
+              <sds-select-content *sdsSelectPortal>
+                @for (opt of typeOptions; track opt) {
+                  <sds-select-item [value]="opt">{{ opt }}</sds-select-item>
+                }
+              </sds-select-content>
+            </div>
+
+            <div class="upload-split">
+              <button type="button" class="upload-main" (click)="triggerFilePicker()">Upload</button>
+              <button type="button" class="upload-caret" aria-label="Upload options" (click)="toggleUploadMenu($event)">
+                <app-sds-icon name="chevron-down" [size]="14"></app-sds-icon>
+              </button>
+              @if (uploadMenuOpen()) {
+                <div class="upload-menu" role="menu" (click)="$event.stopPropagation()">
+                  <button type="button" class="upload-menu-item" role="menuitem" (click)="triggerFilePicker()">Upload files</button>
+                  <button type="button" class="upload-menu-item" role="menuitem" (click)="openPaste()">Paste text</button>
+                </div>
+              }
+            </div>
+
+            <button type="button" sdsIconButton variant="ghost" size="xs" aria-label="More options">
+              <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+            </button>
+          </div>
+        </div>
+
+        @if (hasDocuments()) {
+          <div class="doc-table-wrap">
+            <table class="doc-table" aria-label="Documents">
+              <thead>
+                <tr>
+                  <th class="check-col"><input type="checkbox" aria-label="Select all" /></th>
+                  <th>Name</th><th>Type</th><th>Chunks</th><th>Tokens</th><th>Created</th><th>Status</th>
+                  <th class="actions-head">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (doc of documents(); track trackDoc($index, doc)) {
+                  <tr>
+                    <td class="check-col"><input type="checkbox" [attr.aria-label]="'Select ' + doc.name" /></td>
+                    <td class="name-cell">{{ doc.name }}</td>
+                    <td>{{ doc.type }}</td>
+                    <td>{{ doc.chunks }}</td>
+                    <td>{{ doc.tokens }}</td>
+                    <td class="muted-cell">{{ doc.created }}</td>
+                    <td><span class="doc-status" [attr.data-status]="statusKey(doc.status)">{{ doc.status }}</span></td>
+                    <td class="actions-cell">
+                      <div class="row-menu-anchor">
+                        <button type="button" class="row-menu-button" sdsIconButton variant="ghost" size="xs" aria-label="Document actions" (click)="toggleRowMenu(doc.id, $event)">
+                          <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                        </button>
+                        @if (isRowMenuOpen(doc.id)) {
+                          <div class="row-action-menu" role="menu" [style.top.px]="menuPos()?.top" [style.right.px]="menuPos()?.right" (click)="$event.stopPropagation()">
+                            <button type="button" class="row-action-item" role="menuitem" (click)="resync(doc, $event)">Resync</button>
+                            <button type="button" class="row-action-item is-danger" role="menuitem" (click)="requestDelete(doc, $event)">Delete</button>
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr class="empty-row"><td colspan="8">No documents match your search.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <footer class="doc-footer">
+            <span>{{ documents().length }} documents</span>
+            <span>10 per page</span>
+          </footer>
+        } @else {
+          <div class="drop-zone">
+            <span class="drop-icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M5 21h14" />
+              </svg>
+            </span>
+            <p class="drop-title">Drag and drop to upload or <button type="button" class="browse-link" (click)="triggerFilePicker()">Browse Files</button></p>
+            <p class="drop-hint">PDF, DOCX, TXT, MD, CSV, XLSX, PPTX, HTML, JSON (max 50MB per file)</p>
+            <p class="drop-or">OR</p>
+            <button type="button" class="paste-btn" (click)="openPaste()">Paste Text</button>
+          </div>
+        }
+      } @else if (selectedChild(); as sel) {
+        <!-- Connector detail (Details & Sync / Documents) -->
+        <div class="conn-tabs">
+          <button type="button" class="conn-tab" [class.is-active]="detailTab() === 'sync'" (click)="detailTab.set('sync')">Details &amp; Sync</button>
+          <button type="button" class="conn-tab" [class.is-active]="detailTab() === 'documents'" (click)="detailTab.set('documents')">Documents (212)</button>
+        </div>
+
+        @if (detailTab() === 'sync') {
+          <div class="conn-body">
+            <div class="conn-header">
+              <div class="conn-header-left">
+                <img class="conn-logo" [src]="sel.source.logo" [alt]="sel.source.name" />
+                <div>
+                  <div class="conn-title">
+                    {{ sel.child.name }}
+                    <app-sds-icon class="verified" name="circle-check" [size]="16"></app-sds-icon>
+                  </div>
+                  <div class="conn-sub">SaaS / Knowledge <span class="dot">·</span> Manual only <span class="dot">·</span> <a class="view-path">View Path</a></div>
+                </div>
+              </div>
+              <div class="conn-header-right">
+                <div class="synced-docs">
+                  <span class="synced-label">Synced Documents</span>
+                  <span class="synced-stat">{{ sel.child.tokens }} Tokens <span class="dot">·</span> {{ sel.child.chunks }} Chunks</span>
+                </div>
+                <button type="button" sdsIconButton variant="ghost" size="xs" aria-label="Source options"><app-sds-icon name="kebab" [size]="16"></app-sds-icon></button>
+              </div>
+            </div>
+
+            <p class="conn-desc">Sync wiki pages from Confluence Cloud or Data Center.</p>
+
+            <div class="sync-bar">
+              <div class="sync-bar-left">
+                <strong>Synced (16)</strong>
+                <span class="sync-last">Last sync: May 26, 2026 17:35</span>
+              </div>
+              <button type="button" class="sync-btn">
+                <app-sds-icon name="rotate-cw" [size]="14"></app-sds-icon>
+                Sync
+              </button>
+            </div>
+
+            <div class="sync-table-wrap">
+              <table class="sync-table" aria-label="Sync runs">
+                <thead>
+                  <tr><th>Configure</th><th>Changes</th><th>Run Time</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  @for (run of syncRuns; track $index) {
+                    <tr>
+                      <td>{{ run.configure }}</td>
+                      <td class="muted-cell">{{ run.upserts }} upserts <span class="dot">·</span> {{ run.deletes }} deletes <span class="dot">·</span> {{ run.errors }} errors</td>
+                      <td class="muted-cell">{{ run.runTime }}</td>
+                      <td><span class="doc-status" [attr.data-status]="statusKey(run.status)">{{ run.status }}</span></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <footer class="doc-footer">
+              <span>1–10 of 12 records</span>
+              <span>10 per page</span>
+            </footer>
+          </div>
+        } @else {
+          <div class="doc-table-wrap">
+            <table class="doc-table" aria-label="Documents">
+              <thead>
+                <tr>
+                  <th class="check-col"><input type="checkbox" aria-label="Select all" /></th>
+                  <th>Name</th><th>Type</th><th>Chunks</th><th>Tokens</th><th>Created</th><th>Status</th>
+                  <th class="actions-head">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (doc of documents(); track trackDoc($index, doc)) {
+                  <tr>
+                    <td class="check-col"><input type="checkbox" /></td>
+                    <td class="name-cell">{{ doc.name }}</td>
+                    <td>{{ doc.type }}</td>
+                    <td>{{ doc.chunks }}</td>
+                    <td>{{ doc.tokens }}</td>
+                    <td class="muted-cell">{{ doc.created }}</td>
+                    <td><span class="doc-status" [attr.data-status]="statusKey(doc.status)">{{ doc.status }}</span></td>
+                    <td class="actions-cell">
+                      <div class="row-menu-anchor">
+                        <button type="button" class="row-menu-button" sdsIconButton variant="ghost" size="xs" aria-label="Document actions" (click)="toggleRowMenu(doc.id, $event)">
+                          <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                        </button>
+                        @if (isRowMenuOpen(doc.id)) {
+                          <div class="row-action-menu" role="menu" [style.top.px]="menuPos()?.top" [style.right.px]="menuPos()?.right" (click)="$event.stopPropagation()">
+                            <button type="button" class="row-action-item" role="menuitem" (click)="resync(doc, $event)">Resync</button>
+                            <button type="button" class="row-action-item is-danger" role="menuitem" (click)="requestDelete(doc, $event)">Delete</button>
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    </main>
+  </div>
+
+  <input #fileInput id="kb-file-input" type="file" multiple hidden (change)="onFilesSelected($event)" />
+
+  <!-- Add Connector modal -->
+  @if (connectorModalOpen()) {
+    <div class="modal-backdrop" role="presentation" (click)="closeConnectorModal()">
+      <section class="connector-modal" role="dialog" aria-modal="true" aria-labelledby="add-connector-title" (click)="$event.stopPropagation()">
+        <header class="connector-head">
+          <h2 id="add-connector-title">Add Connector</h2>
+          <button type="button" class="modal-close" aria-label="Close" (click)="closeConnectorModal()"><app-sds-icon name="x" [size]="18"></app-sds-icon></button>
+        </header>
+
+        @if (connectorStep() === 'connector') {
+          <label class="connector-search" sdsSearchField for="connector-search">
+            <app-sds-icon name="search" [size]="16"></app-sds-icon>
+            <input id="connector-search" type="search" placeholder="Search" [value]="connectorSearch()" (input)="connectorSearch.set($any($event.target).value)" />
+          </label>
+
+          <div class="connector-scroll">
+            <p class="connector-group-label">SaaS Cloud</p>
+            <div class="connector-grid">
+              @for (c of cloudConnectors(); track c.name) {
+                <button type="button" class="connector-card" [class.is-selected]="selectedConnector() === c.name" (click)="selectConnector(c.name)">
+                  <div class="connector-card-top">
+                    <img class="connector-logo" [src]="c.logo" [alt]="c.name" />
+                    <span class="connector-name">{{ c.name }}</span>
+                    @if (selectedConnector() === c.name) {
+                      <app-sds-icon class="connector-check" name="circle-check" [size]="18"></app-sds-icon>
+                    }
+                  </div>
+                  <p class="connector-desc">{{ c.desc }}</p>
+                </button>
+              }
+            </div>
+
+            <p class="connector-group-label">SaaS Platform</p>
+            <div class="connector-grid">
+              @for (c of platformConnectors(); track c.name) {
+                <button type="button" class="connector-card" [class.is-selected]="selectedConnector() === c.name" (click)="selectConnector(c.name)">
+                  <div class="connector-card-top">
+                    <img class="connector-logo" [src]="c.logo" [alt]="c.name" />
+                    <span class="connector-name">{{ c.name }}</span>
+                    @if (selectedConnector() === c.name) {
+                      <app-sds-icon class="connector-check" name="circle-check" [size]="18"></app-sds-icon>
+                    }
+                  </div>
+                  <p class="connector-desc">{{ c.desc }}</p>
+                </button>
+              }
+            </div>
+          </div>
+
+          <footer class="connector-foot">
+            <button type="button" sdsButton variant="secondary" (click)="closeConnectorModal()">Cancel</button>
+            <button type="button" sdsButton variant="primary" [disabled]="!selectedConnector()" (click)="goToCredentialStep()">Next</button>
+          </footer>
+        } @else {
+          <div class="connector-scroll">
+            <h3 class="cred-title">Select a Credential</h3>
+            <p class="cred-subtitle">Ensure that you have selected a credential with the proper permissions for this connector!</p>
+
+            <p class="cred-section-label">App Credentials</p>
+            <div class="cred-mode" role="radiogroup" aria-label="App credentials mode">
+              <label class="cred-radio">
+                <input type="radio" name="credMode" [checked]="credMode() === 'existing'" (change)="credMode.set('existing')" />
+                <span>Use Existing</span>
+              </label>
+              <label class="cred-radio">
+                <input type="radio" name="credMode" [checked]="credMode() === 'new'" (change)="credMode.set('new')" />
+                <span>Add New</span>
+              </label>
+            </div>
+
+            @if (credMode() === 'existing') {
+              <table class="cred-table" aria-label="Existing credentials">
+                <thead>
+                  <tr>
+                    <th class="cred-radio-col"></th>
+                    <th>ID</th><th>Name</th><th>Created</th><th>Last Updated</th><th class="cred-actions-col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (cred of credentials(); track cred.id) {
+                    <tr [class.is-selected]="selectedCredId() === cred.id" (click)="selectCredential(cred.id)">
+                      <td class="cred-radio-col"><input type="radio" name="credSel" [checked]="selectedCredId() === cred.id" (change)="selectCredential(cred.id)" /></td>
+                      <td>{{ cred.id | slice: 0:8 }}…</td>
+                      <td>{{ cred.name }}</td>
+                      <td class="muted-cell">{{ cred.created }}</td>
+                      <td class="muted-cell">{{ cred.lastUpdated }}</td>
+                      <td class="cred-actions-col">
+                        <button type="button" class="cred-trash" aria-label="Delete credential" (click)="deleteCredential(cred.id, $event)">
+                          <app-sds-icon name="trash" [size]="16"></app-sds-icon>
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr class="empty-row"><td colspan="6">No credentials yet — add a new one.</td></tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <div class="cred-form">
+                <div class="modal-field">
+                  <label for="cred-name">Name</label>
+                  <input id="cred-name" sdsInput type="text" placeholder="e.g. Jira Connect" [value]="credName()" (input)="credName.set($any($event.target).value)" />
+                </div>
+
+                <div class="auth-toggle" role="radiogroup" aria-label="Authentication">
+                  <button type="button" class="auth-tab" [class.is-active]="authMode() === 'secret'" (click)="authMode.set('secret')">Client Secret</button>
+                  <button type="button" class="auth-tab" [class.is-active]="authMode() === 'cert'" (click)="authMode.set('cert')">Certificate Authentication</button>
+                </div>
+
+                <div class="cred-form-row">
+                  <div class="modal-field">
+                    <label for="cred-event">Event Type</label>
+                    <input id="cred-event" sdsInput type="text" placeholder="new@newmail.com" [value]="eventType()" (input)="eventType.set($any($event.target).value)" />
+                  </div>
+                  <div class="modal-field">
+                    <label for="cred-trigger">Trigger Event</label>
+                    <input id="cred-trigger" sdsInput type="password" placeholder="••••••••••••" [value]="triggerEvent()" (input)="triggerEvent.set($any($event.target).value)" />
+                  </div>
+                </div>
+
+                <div class="modal-field">
+                  <label for="cred-dir">SharePoint Directory ID</label>
+                  <input id="cred-dir" sdsInput type="text" placeholder="Azure AD Tenant / Directory UUID" [value]="sharepointDir()" (input)="sharepointDir.set($any($event.target).value)" />
+                </div>
+              </div>
+            }
+          </div>
+
+          <footer class="connector-foot">
+            <button type="button" sdsButton variant="secondary" (click)="closeConnectorModal()">Cancel</button>
+            <button type="button" sdsButton variant="primary" [disabled]="!canConnect()" (click)="confirmConnector()">Connect</button>
+          </footer>
+        }
+      </section>
+    </div>
+  }
+
+  <!-- Paste text modal -->
+  @if (pasteOpen()) {
+    <div class="modal-backdrop" role="presentation" (click)="closePaste()">
+      <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="paste-title" (click)="$event.stopPropagation()">
+        <button type="button" class="modal-close" aria-label="Close" (click)="closePaste()"><app-sds-icon name="x" [size]="18"></app-sds-icon></button>
+        <header class="modal-head">
+          <h2 id="paste-title">Paste Text</h2>
+          <p>Create a text document by giving it a name and pasting its content.</p>
+        </header>
+        <div class="modal-field">
+          <label for="paste-name">Name</label>
+          <input id="paste-name" sdsInput type="text" placeholder="e.g. Leave Policy" [value]="pasteName()" (input)="pasteName.set($any($event.target).value)" />
+        </div>
+        <div class="modal-field">
+          <label for="paste-text">Document text</label>
+          <textarea id="paste-text" sdsTextarea rows="8" placeholder="Paste your content here…" [value]="pasteText()" (input)="pasteText.set($any($event.target).value)"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" sdsButton variant="secondary" (click)="closePaste()">Cancel</button>
+          <button type="button" sdsButton variant="primary" [disabled]="!canSaveText()" (click)="savePaste()">Create document</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  <!-- Upload progress popup -->
+  @if (showUploads()) {
+    <div class="upload-popup" role="status" aria-label="Uploading documents">
+      <header class="upload-popup-head">
+        <strong>Uploading {{ uploads().length }} {{ uploads().length === 1 ? 'file' : 'files' }}</strong>
+        <button type="button" class="upload-popup-close" aria-label="Dismiss" (click)="dismissUploads()"><app-sds-icon name="x" [size]="16"></app-sds-icon></button>
+      </header>
+      <ul class="upload-list">
+        @for (u of uploads(); track u.docId) {
+          <li class="upload-item">
+            <div class="upload-item-top">
+              <span class="upload-item-name">{{ u.name }}</span>
+              <span class="upload-item-state" [class.is-failed]="u.failed">
+                @if (u.failed) {
+                  <app-sds-icon name="circle-x" [size]="14"></app-sds-icon> Unable to upload
+                } @else if (u.done) {
+                  <app-sds-icon name="circle-check" [size]="14"></app-sds-icon> Done
+                } @else {
+                  {{ u.progress | number: '1.0-0' }}%
+                }
+              </span>
+            </div>
+            <div class="upload-bar"><span class="upload-bar-fill" [style.width.%]="u.progress" [class.is-done]="u.done" [class.is-failed]="u.failed"></span></div>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <!-- Delete confirm -->
+  @if (pendingDelete(); as doc) {
+    <div class="modal-backdrop" role="presentation" (click)="cancelDelete()">
+      <section class="modal-card" role="alertdialog" aria-modal="true" aria-labelledby="doc-delete-title" (click)="$event.stopPropagation()">
+        <button type="button" class="modal-close" aria-label="Close" (click)="cancelDelete()"><app-sds-icon name="x" [size]="18"></app-sds-icon></button>
+        <header class="modal-head">
+          <h2 id="doc-delete-title">Delete “{{ doc.name }}”?</h2>
+          <p>This document will be removed from the knowledge base. This can’t be undone.</p>
+        </header>
+        <div class="modal-actions">
+          <button type="button" sdsButton variant="secondary" (click)="cancelDelete()">Cancel</button>
+          <button type="button" sdsButton variant="primary" class="danger-confirm" (click)="confirmDelete()">Delete</button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

@@ -1,0 +1,10 @@
+<svg width="37" height="16" viewBox="0 0 37 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sparkDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 12C5 12 6 6 11 6C16 6 16 11 21 9C26 7 27 4 32 6C35.5 7.4 36 9 37 9V16H0V12Z" fill="url(#sparkDark)"/>
+  <path d="M0 12C5 12 6 6 11 6C16 6 16 11 21 9C26 7 27 4 32 6C35.5 7.4 36 9 37 9" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

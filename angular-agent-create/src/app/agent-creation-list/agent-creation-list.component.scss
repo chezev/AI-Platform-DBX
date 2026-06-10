@@ -1,14 +1,20 @@
 :host {
   --shell-left-gutter: var(--sds-padding-16);
-  display: block;
-  min-height: 100vh;
+  /* Fill the content area and own our scroll so only the table body scrolls. */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
   background: var(--sds-bg-neutralGrey-light2);
   color: var(--sds-text-neutral-body);
   font-family: 'Darwin Sans', 'Segoe UI', sans-serif;
 }
 
 .page-shell {
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .page-search {
@@ -147,14 +153,23 @@
 }
 
 .tab-panel {
-  padding: var(--sds-padding-20) var(--sds-padding-24) 0;
+  /* White content area; table spans full width, toolbar + grid keep their inset. */
+  padding: 0;
+  background: var(--sds-bg-neutralWhite-default);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .controls-row {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--sds-gap-16);
+  /* Equal top/bottom; horizontal inset matches the th so Agent Name aligns with search. */
+  padding: var(--sds-padding-16) var(--sds-padding-24);
 }
 
 .page-search {
@@ -211,10 +226,18 @@
 }
 
 .agent-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   margin-top: var(--sds-gap-24);
+  padding: 0 var(--sds-padding-24) var(--sds-padding-24);
   display: grid;
   grid-template-columns: repeat(4, minmax(220px, 1fr));
+  /* Rows size to the card's full content (incl. 2-line description); without this
+     the constrained scroll container compresses rows and collapses the <p>. */
+  grid-auto-rows: max-content;
   gap: var(--sds-gap-16);
+  align-content: start;
 }
 
 .agent-card {
@@ -227,7 +250,9 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--sds-gap-12);
+  /* Per-element spacing set via margins below (icon→title 16, title→desc 6, desc→footer 16). */
+  gap: 0;
+  cursor: pointer;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -235,8 +260,16 @@
 }
 
 .agent-card:hover {
-  border-color: rgba(167, 128, 239, 0.4);
-  background: linear-gradient(180deg, rgba(251, 251, 251, 0.25) 0%, rgba(214, 199, 249, 0.05) 171.43%);
+  border-color: var(--sds-border-neutralGrey-hover);
+  background: var(--sds-bg-neutralGrey-light1);
+}
+
+.agent-card:focus-visible {
+  outline: none;
+  border-color: var(--sds-border-neutralBlue-active);
+  box-shadow:
+    0 0 0 1px var(--sds-border-neutralBlue-active),
+    var(--sds-shadow-card);
 }
 
 .agent-card.is-highlighted {
@@ -246,10 +279,37 @@
     var(--sds-shadow-card);
 }
 
+.agent-card-icon {
+  display: inline-flex;
+  align-self: flex-start;
+  line-height: 0;
+  margin-bottom: var(--sds-gap-12);
+}
+
+.agent-card-icon img {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+/* Dark mode: deco icons have a dark glyph that vanishes on dark cards. No tile —
+   invert + hue-rotate keeps the chip's colour while lifting the glyph to a light
+   tone so it stays legible on the dark surface. */
+:host-context(.dark) .agent-card-icon img {
+  filter: invert(1) hue-rotate(180deg) brightness(1.15);
+}
+
 .card-menu-anchor {
   position: absolute;
   top: var(--sds-padding-12);
   right: var(--sds-padding-12);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.agent-card:hover .card-menu-anchor,
+.agent-card:focus-within .card-menu-anchor {
+  opacity: 1;
 }
 
 .card-menu-button {
@@ -307,8 +367,12 @@
   background: var(--sds-bg-neutralGrey-light2);
 }
 
+.card-action-item.is-danger {
+  color: var(--sds-text-feedback-error);
+}
+
 .agent-card h3 {
-  margin: 0;
+  margin: 0 0 var(--sds-gap-8);
   padding-right: var(--sds-padding-20);
   color: var(--sds-text-neutral-title);
   font-size: var(--sds-title-xxs-medium-font-size);
@@ -329,15 +393,18 @@
 }
 
 .agent-meta {
+  /* Pin to the bottom so Active/Sessions align across cards regardless of how
+     much description text there is; keep at least 20px above it. */
   margin-top: auto;
+  padding-top: var(--sds-gap-20);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sds-gap-8);
+  justify-content: flex-start;
+  gap: var(--sds-gap-16);
 }
 
-.agent-category,
-.agent-status {
+.agent-status,
+.agent-sessions {
   display: inline-flex;
   align-items: center;
   gap: var(--sds-gap-4);
@@ -348,66 +415,64 @@
   min-width: 0;
 }
 
-.agent-category {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.meta-divider {
+.agent-status app-sds-icon {
   color: var(--sds-text-neutral-ghost);
 }
 
-.category-dot,
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
+.agent-status[data-status='active'] app-sds-icon {
+  color: var(--sds-bg-feedback-successHigh);
+}
+
+.agent-status[data-status='deactivated'] app-sds-icon {
+  color: var(--sds-bg-feedback-warningHigh);
+}
+
+.agent-sessions {
+  gap: var(--sds-gap-8);
+}
+
+.status-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
   flex: 0 0 auto;
 }
 
-.category-dot[data-accent='red'] {
-  background: var(--sds-bg-feedback-errorHigh);
+.sessions-spark {
+  width: 37px;
+  height: 16px;
+  display: block;
+  flex: 0 0 auto;
+  /* Nudge the graph up so its crest aligns with the text. */
+  transform: translateY(-4px);
+  background: url('/assets/icons/agents/sessions-spark.svg') no-repeat center / contain;
 }
 
-.category-dot[data-accent='blue'] {
-  background: var(--sds-bg-neutralBlue-active);
+/* Dark mode: light-blue sparkline reads badly on dark cards — swap to a
+   blue→black gradient variant that blends into the surface. */
+:host-context(.dark) .sessions-spark {
+  background-image: url('/assets/icons/agents/sessions-spark-dark.svg');
 }
 
-.category-dot[data-accent='teal'] {
-  background: var(--sds-bg-feedback-infoHigh);
+.sessions-count {
+  color: var(--sds-text-neutral-title);
+  font-weight: var(--sds-body-s-bold-font-weight);
 }
 
-.category-dot[data-accent='orange'] {
-  background: var(--sds-bg-feedback-warningHigh);
-}
-
-.category-dot[data-accent='purple'] {
-  background: var(--sds-bg-feedback-infoMid);
-}
-
-.category-dot[data-accent='gray'] {
-  background: var(--sds-bg-primary-readOnly);
-}
-
-.agent-status[data-status='active'] .status-dot {
-  background: var(--sds-bg-feedback-successHigh);
-}
-
-.agent-status[data-status='draft'] .status-dot {
-  border: 1px solid var(--sds-border-primary-default);
-  background: var(--sds-bg-neutralWhite-default);
-}
-
-.agent-status[data-status='deactivated'] .status-dot {
-  background: var(--sds-bg-feedback-warningHigh);
+/* Sessions column in list view — sparkline + count */
+.sessions-cell .agent-sessions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-8);
 }
 
 .agent-list-table-wrap {
   margin-top: var(--sds-gap-12);
   width: 100%;
-  overflow-x: auto;
+  /* Only the rows scroll; the header stays via sticky thead below. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .agent-list-table {
@@ -418,8 +483,11 @@
 }
 
 .agent-list-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   height: 40px;
-  padding: 0 var(--sds-padding-12);
+  padding: 0 var(--sds-padding-24);
   background: var(--sds-bg-neutralBlue-light1);
   color: var(--sds-text-neutral-title);
   text-align: left;
@@ -431,7 +499,7 @@
 
 .agent-list-table td {
   height: 52px;
-  padding: 0 var(--sds-padding-12);
+  padding: 0 var(--sds-padding-24);
   border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
   color: var(--sds-text-neutral-body);
   font-family: inherit;
@@ -444,7 +512,21 @@
 }
 
 .agent-list-table tr {
+  cursor: pointer;
   transition: background-color 160ms ease;
+}
+
+.agent-list-table tbody tr:hover td {
+  background: var(--sds-bg-neutralGrey-light1);
+}
+
+.agent-list-table tbody tr:focus-visible {
+  outline: none;
+}
+
+.agent-list-table tbody tr:focus-visible td {
+  background: var(--sds-bg-neutralBlue-light1);
+  box-shadow: inset 0 0 0 1px var(--sds-border-neutralBlue-active);
 }
 
 .agent-list-table tr.is-highlighted td {
@@ -455,9 +537,15 @@
   color: var(--sds-text-neutral-title);
 }
 
+/* Whole row is clickable; on hover surface the name as a link. */
+.agent-list-table tbody tr:hover .name-cell {
+  color: var(--sds-bg-neutralBlue-active);
+  text-decoration: underline;
+}
+
 .agent-list-table th:nth-child(1),
 .agent-list-table td:nth-child(1) {
-  width: 22%;
+  width: 20%;
 }
 
 .agent-list-table th:nth-child(2),
@@ -467,22 +555,31 @@
 
 .agent-list-table th:nth-child(3),
 .agent-list-table td:nth-child(3) {
-  width: 20%;
+  width: 8%;
 }
 
 .agent-list-table th:nth-child(4),
 .agent-list-table td:nth-child(4) {
-  width: 18%;
+  width: 17%;
 }
 
 .agent-list-table th:nth-child(5),
 .agent-list-table td:nth-child(5) {
-  width: 18%;
+  width: 16%;
 }
 
 .agent-list-table th:nth-child(6),
 .agent-list-table td:nth-child(6) {
+  width: 16%;
+}
+
+.agent-list-table th:nth-child(7),
+.agent-list-table td:nth-child(7) {
   width: 9%;
+}
+
+.sessions-cell .muted-dash {
+  color: var(--sds-text-neutral-ghost);
 }
 
 .agent-list-table .actions-head,
@@ -562,6 +659,49 @@
   line-height: var(--sds-body-m-book-line-height);
 }
 
+.delete-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--sds-bg-overlay-blanket);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sds-padding-24);
+}
+
+.delete-dialog {
+  width: min(420px, calc(100vw - var(--sds-padding-24) - var(--sds-padding-24)));
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
+  box-shadow: var(--sds-shadow-dialog);
+  padding: var(--sds-padding-24);
+}
+
+.delete-dialog h2 {
+  margin: 0;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-xxs-medium-font-size);
+  font-weight: var(--sds-title-xxs-medium-font-weight);
+  line-height: var(--sds-title-xxs-medium-line-height);
+}
+
+.delete-dialog p {
+  margin: var(--sds-gap-8) 0 0;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-m-book-font-size);
+  font-weight: var(--sds-body-m-book-font-weight);
+  line-height: var(--sds-body-m-book-line-height);
+}
+
+.delete-dialog-actions {
+  margin-top: var(--sds-gap-20);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sds-gap-8);
+}
+
 @media (max-width: 1180px) {
   .agent-grid {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -593,4 +733,66 @@
 
 :host ::ng-deep .sds-select-value[data-hidden] {
   display: none;
+}
+
+/* ── Agents list pagination footer ── */
+.list-footer {
+  /* Sits below the scrolling rows and stays put (rows scroll, not the footer). */
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sds-gap-16);
+  padding: var(--sds-padding-12) var(--sds-padding-24);
+  border-top: 1px solid var(--sds-border-neutralGrey-light2);
+  background: var(--sds-bg-neutralWhite-default);
+}
+
+.perpage-select {
+  --sds-select-width: 132px;
+  display: inline-flex;
+}
+
+.list-footer .footer-summary,
+.list-footer .footer-perpage {
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+.footer-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-4);
+}
+
+.footer-pages .page-link {
+  min-width: var(--sds-size-32);
+  height: var(--sds-size-32);
+  padding: 0 var(--sds-padding-8);
+  border: none;
+  border-radius: var(--sds-border-radius-4);
+  background: transparent;
+  color: var(--sds-text-neutral-label);
+  font: inherit;
+  font-size: var(--sds-body-s-book-font-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.footer-pages .page-link:hover:not(:disabled) {
+  background: var(--sds-bg-neutralGrey-light2);
+}
+
+.footer-pages .page-link.is-active {
+  background: var(--sds-bg-neutralGrey-light2);
+  color: var(--sds-text-neutral-title);
+  font-weight: var(--sds-body-m-medium-font-weight);
+}
+
+.footer-pages .page-link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

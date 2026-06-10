@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -123,6 +123,7 @@ type SaveIntent = 'create' | 'draft' | 'activate';
 export class AgentCreateScreenComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly agentApi = inject(AgentApiService);
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly toastService = inject(SdsToastService);
@@ -344,6 +345,16 @@ export class AgentCreateScreenComponent {
       return 'Creative';
     }
     return 'Balanced';
+  }
+
+  goBack(): void {
+    // Editing an existing agent returns to its detail page; a brand-new agent
+    // skips the create-options/startup step and returns to the Agent Hub list.
+    if (this.source === 'existing') {
+      this.location.back();
+    } else {
+      void this.router.navigate(['/agent-hub/agents']);
+    }
   }
 
   toggleActionMenu(event: MouseEvent): void {

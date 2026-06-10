@@ -53,10 +53,14 @@
 
 .back-link {
   flex: 0 0 auto;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: var(--sds-text-neutral-label);
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .back-link:hover,
@@ -88,45 +92,54 @@
   min-height: 0;
   height: calc(100dvh - var(--test-global-topbar-height) - var(--test-subheader-height));
   max-height: calc(100dvh - var(--test-global-topbar-height) - var(--test-subheader-height));
-  display: block;
+  display: grid;
+  /* 3 zones: [left space] [650px chat] [right space]. The two side zones are
+     equal (1fr) so the chat is centered in the viewport — in every state.
+     Opening the trace only grows the left zone, so the chat never moves on
+     wide screens. Vertical padding is constant so it never shifts up/down. */
+  grid-template-columns: minmax(0, 1fr) var(--test-chat-column-width) minmax(0, 1fr);
+  column-gap: 0;
+  padding: var(--sds-padding-12) 0 var(--sds-padding-16) 0;
   background: var(--sds-bg-neutralWhite-default);
   overflow: hidden;
+  transition: grid-template-columns 280ms ease, column-gap 280ms ease;
 }
 
 .test-workspace.has-trace {
-  padding: 0;
+  padding-left: var(--sds-padding-12);
 }
 
 .trace-side-panel {
   --trace-panel-width: var(--test-trace-panel-width);
-  position: absolute;
+  grid-column: 1;
+  justify-self: start;
+  position: relative;
   z-index: 10;
-  left: var(--sds-padding-12);
-  top: var(--sds-padding-12);
-  bottom: var(--sds-padding-16);
+  /* Fixed width so the panel keeps its size inside the wide left zone — it
+     does not stretch to fill the empty space beside the centered chat. */
   width: calc(var(--test-trace-panel-width) + var(--test-mode-switcher-width) + var(--sds-gap-16));
-  height: auto;
-  max-height: none;
+  height: 100%;
   min-height: 0;
   pointer-events: auto;
 }
 
+/* Expanded: widen column 1 and add gap — both animate via the transition above */
+/* Expanded: chat is a fixed 450px on the right with EQUAL 50px spacing on both
+   sides (left = column-gap from switcher, right = padding). The trace block
+   fills ALL remaining space (responsive to screen width). */
 .test-workspace.is-trace-expanded {
-  display: grid;
-  grid-template-columns: calc(var(--test-trace-panel-wide-width) + var(--test-mode-switcher-width) + var(--sds-gap-16)) minmax(0, 1fr);
-  column-gap: calc(var(--sds-gap-40) + var(--sds-gap-8));
-  padding: var(--sds-padding-12) 0 var(--sds-padding-16) var(--sds-padding-12);
+  --test-chat-column-width: 450px;
+  grid-template-columns: minmax(0, 1fr) var(--test-chat-column-width);
+  column-gap: 50px;
+  padding-right: 50px;
 }
 
 .test-workspace.is-trace-expanded .trace-side-panel {
-  --trace-panel-width: var(--test-trace-panel-wide-width);
-  position: relative;
-  left: auto;
-  top: auto;
-  bottom: auto;
-  width: calc(var(--test-trace-panel-wide-width) + var(--test-mode-switcher-width) + var(--sds-gap-16));
-  height: 100%;
-  max-height: 100%;
+  /* 1fr lets the inner log panel grow to fill the column; switcher stays 88px
+     pinned at the right, so the trace block consumes all the leftover space. */
+  --trace-panel-width: 1fr;
+  width: 100%;
+  z-index: auto;
 }
 
 .chat-stage {
@@ -138,26 +151,32 @@
   align-items: stretch;
   row-gap: var(--sds-gap-32);
   overflow: hidden;
-  padding: var(--sds-padding-40) var(--sds-padding-24) var(--sds-padding-16);
+  grid-column: 2;
+  padding: var(--sds-padding-40) 0 0;
 }
 
-.test-workspace.is-trace-expanded .chat-stage {
-  justify-items: start;
-  padding: var(--sds-padding-40) var(--sds-padding-24) var(--sds-padding-16) 0;
-}
 
-.test-workspace.is-trace-expanded .chat-column {
-  justify-self: start;
+/* Non-expanded: left zone is at least wide enough for the trace block. On wide
+   screens it grows as 1fr (chat stays centered); on narrow screens it clamps to
+   the trace width and the chat nudges right just enough to clear it. */
+.test-workspace.has-trace:not(.is-trace-expanded) {
+  grid-template-columns:
+    minmax(calc(var(--test-trace-panel-width) + var(--test-mode-switcher-width) + var(--sds-gap-16) + var(--sds-padding-24)), 1fr)
+    var(--test-chat-column-width)
+    minmax(0, 1fr);
 }
 
 .chat-intro {
+  width: min(var(--test-chat-column-width), 100%);
   justify-self: center;
   align-self: start;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--sds-gap-8);
   text-align: center;
+  margin-inline: auto;
   margin-bottom: 0;
 }
 
@@ -189,15 +208,18 @@
 
 .chat-column {
   width: min(var(--test-chat-column-width), 100%);
+  height: 100%;
   min-height: 0;
   justify-self: center;
   align-self: stretch;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  row-gap: var(--sds-gap-32);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-32);
 }
 
 .chat-thread {
+  flex: 1 1 auto;
   width: 100%;
   min-height: 0;
   justify-self: stretch;
@@ -206,8 +228,10 @@
   flex-direction: column;
   gap: var(--sds-gap-40);
   overflow: auto;
-  padding-bottom: var(--sds-size-64);
-  scroll-padding-bottom: var(--sds-size-64);
+  /* Clears the bottom dock (composer + the suggestion chips above it). */
+  padding-bottom: calc(var(--sds-size-88) + var(--sds-padding-24) + 48px);
+  scroll-padding-bottom: calc(var(--sds-size-88) + var(--sds-padding-24) + 48px);
+  text-align: left;
   scrollbar-width: none;
 }
 
@@ -254,6 +278,7 @@
   background: var(--sds-bg-neutralBlue-default);
   color: var(--sds-text-neutral-label);
   padding: var(--sds-padding-12);
+  text-align: left;
   font-size: var(--sds-body-l-book-font-size);
   font-weight: var(--sds-body-l-book-font-weight);
   line-height: var(--sds-body-l-book-line-height);
@@ -269,16 +294,62 @@
 
 .assistant-block p {
   color: var(--sds-text-neutral-label);
+  text-align: left;
   font-size: var(--sds-body-l-book-font-size);
   font-weight: var(--sds-body-l-book-font-weight);
   line-height: var(--sds-body-l-book-line-height);
 }
 
+/* Suggestions + composer share one bottom-pinned dock so the chips always sit
+   directly above the input, regardless of how tall the composer grows. */
+.composer-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-8);
+}
+
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sds-gap-8);
+}
+
+.suggestions-label {
+  color: var(--sds-text-neutral-ghost);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+.suggestion-chip {
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: 999px;
+  padding: var(--sds-padding-8) var(--sds-padding-12);
+  background: var(--sds-bg-neutralWhite-default);
+  color: var(--sds-text-neutral-title);
+  font-family: inherit;
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.suggestion-chip:hover {
+  background: var(--sds-bg-neutralBlue-light1);
+  border-color: var(--sds-border-neutralBlue-active);
+  color: var(--sds-text-neutral-title);
+}
+
 .chat-composer {
+  position: static;
   width: 100%;
   min-height: var(--sds-size-88);
   justify-self: stretch;
-  align-self: end;
   border: 1px solid var(--sds-border-primary-default);
   border-radius: var(--sds-border-radius-8);
   background: var(--sds-bg-neutralWhite-default);
@@ -341,12 +412,6 @@
 }
 
 @media (max-width: 960px) {
-  .trace-side-panel {
-    --trace-panel-width: min(var(--test-trace-panel-width), calc(100vw - var(--sds-padding-32)));
-    right: var(--sds-padding-16);
-    width: auto;
-  }
-
   .test-workspace.is-trace-expanded {
     display: block;
     padding: 0;

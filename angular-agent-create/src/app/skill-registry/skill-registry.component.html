@@ -1,11 +1,207 @@
-<main class="feature-shell" aria-label="Skill Registry module">
-  <a routerLink="/" class="feature-back">Back to home</a>
+<!-- Skill Registry list view (modelled on the Agents list). Topbar + product nav
+     + sub-tabs + "Create Skill" CTA come from the shared AppShell. -->
+<div class="page-shell">
+  <section class="tab-panel">
+    <div class="panel-toolbar">
+      <label class="panel-search" sdsSearchField for="skill-search-input">
+        <input
+          id="skill-search-input"
+          type="search"
+          placeholder="Search here"
+          [value]="searchValue()"
+          (input)="onSearchInput($any($event.target).value)"
+        />
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+      </label>
 
-  <section class="feature-card">
-    <p class="feature-eyebrow">Angular module</p>
-    <h1>Skill Registry</h1>
-    <p>
-      Placeholder screen for SDS-based skill catalog, rule bindings, and lifecycle management.
-    </p>
+      <div class="toolbar-right">
+        <div class="status-filter" sdsSelect [value]="typeFilter()" (valueChange)="onTypeFilterChange($event)">
+          <sds-select-trigger>
+            <span class="select-display-label">{{ currentTypeLabel() }}</span>
+          </sds-select-trigger>
+          <sds-select-content *sdsSelectPortal>
+            @for (option of typeOptions; track option.value) {
+              <sds-select-item [value]="option.value">{{ option.label }}</sds-select-item>
+            }
+          </sds-select-content>
+        </div>
+
+        <div class="view-toggle" aria-label="View mode">
+          <button
+            type="button"
+            class="view-mode-btn"
+            [class.is-active]="viewMode() === 'grid'"
+            (click)="setViewMode('grid')"
+            aria-label="Grid view"
+          >
+            <app-sds-icon name="table" [size]="16"></app-sds-icon>
+          </button>
+          <button
+            type="button"
+            class="view-mode-btn"
+            [class.is-active]="viewMode() === 'list'"
+            (click)="setViewMode('list')"
+            aria-label="List view"
+          >
+            <app-sds-icon name="hamburger-menu" [size]="16"></app-sds-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    @if (viewMode() === 'grid') {
+      <div class="skill-grid">
+        @for (skill of visible(); track trackSkill($index, skill)) {
+          <article
+            class="skill-card"
+            role="button"
+            tabindex="0"
+            (click)="openSkill(skill)"
+            (keydown.enter)="openSkill(skill)"
+          >
+            <div class="skill-card-head">
+              <h3 class="link-name">{{ skill.name }}</h3>
+              <div class="skill-card-head-right">
+                <span class="used-badge"><app-sds-icon name="bot" [size]="14"></app-sds-icon>{{ skill.usedBy }}</span>
+                <div class="row-menu-anchor">
+                  <button
+                    type="button"
+                    class="row-menu-button"
+                    sdsIconButton
+                    variant="ghost"
+                    size="xs"
+                    aria-label="More actions"
+                    [attr.aria-expanded]="isMenuOpen(skill.id)"
+                    (click)="toggleMenu(skill.id, $event)"
+                  >
+                    <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                  </button>
+                  @if (isMenuOpen(skill.id)) {
+                    <div
+                      class="row-action-menu"
+                      role="menu"
+                      aria-label="Skill actions"
+                      [style.top.px]="menuPos()?.top"
+                      [style.right.px]="menuPos()?.right"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <button type="button" class="row-action-item" role="menuitem" (click)="onEdit(skill, $event)">Edit</button>
+                      <button type="button" class="row-action-item is-danger" role="menuitem" (click)="requestDelete(skill, $event)">Delete</button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <p class="skill-card-desc">{{ skill.description }}</p>
+
+            <footer class="skill-card-foot">
+              <span class="skill-category">
+                <app-sds-icon name="layout-lists" [size]="14"></app-sds-icon>
+                {{ skill.category }}
+              </span>
+              <span class="type-badge" [attr.data-type]="skill.type.toLowerCase()">
+                <span class="type-dot"></span>
+                {{ skill.type }}
+              </span>
+            </footer>
+          </article>
+        } @empty {
+          <p class="empty-grid">No skills match your search.</p>
+        }
+      </div>
+    } @else {
+
+    <div class="data-table-wrap">
+      <table class="data-table" aria-label="Skills">
+        <thead>
+          <tr>
+            <th>Skill Name</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Used by</th>
+            <th>Created On</th>
+            <th class="actions-head">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (skill of visible(); track trackSkill($index, skill)) {
+            <tr role="button" tabindex="0" (click)="openSkill(skill)" (keydown.enter)="openSkill(skill)">
+              <td><span class="link-name">{{ skill.name }}</span></td>
+              <td class="desc-cell">{{ skill.description }}</td>
+              <td>{{ skill.category }}</td>
+              <td>
+                <span class="type-badge" [attr.data-type]="skill.type.toLowerCase()">
+                  <span class="type-dot"></span>
+                  {{ skill.type }}
+                </span>
+              </td>
+              <td>{{ usedByLabel(skill) }}</td>
+              <td class="muted-cell">{{ skill.createdOn }}</td>
+              <td class="actions-cell">
+                <div class="row-menu-anchor">
+                  <button
+                    type="button"
+                    class="row-menu-button"
+                    sdsIconButton
+                    variant="ghost"
+                    size="xs"
+                    aria-label="More actions"
+                    [attr.aria-expanded]="isMenuOpen(skill.id)"
+                    (click)="toggleMenu(skill.id, $event)"
+                  >
+                    <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                  </button>
+
+                  @if (isMenuOpen(skill.id)) {
+                    <div
+                      class="row-action-menu"
+                      role="menu"
+                      aria-label="Skill actions"
+                      [style.top.px]="menuPos()?.top"
+                      [style.right.px]="menuPos()?.right"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <button type="button" class="row-action-item" role="menuitem" (click)="onEdit(skill, $event)">Edit</button>
+                      <button type="button" class="row-action-item is-danger" role="menuitem" (click)="requestDelete(skill, $event)">Delete</button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr class="empty-row">
+              <td colspan="7">No skills match your search.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      </div>
+    }
   </section>
-</main>
+
+  @if (pendingDelete(); as skill) {
+    <div class="modal-backdrop" role="presentation" (click)="cancelDelete()">
+      <section
+        class="modal-card"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="skill-delete-title"
+        (click)="$event.stopPropagation()"
+      >
+        <button type="button" class="modal-close" aria-label="Close" (click)="cancelDelete()">
+          <app-sds-icon name="x" [size]="18"></app-sds-icon>
+        </button>
+        <header class="modal-head">
+          <h2 id="skill-delete-title">Delete “{{ skill.name }}”?</h2>
+          <p>This skill will be removed from the registry. Agents using it may lose the capability. This can’t be undone.</p>
+        </header>
+        <div class="modal-actions">
+          <button type="button" sdsButton variant="secondary" (click)="cancelDelete()">Cancel</button>
+          <button type="button" sdsButton variant="primary" class="danger-confirm" (click)="confirmDelete()">Delete</button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

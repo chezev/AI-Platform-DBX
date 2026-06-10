@@ -1,0 +1,483 @@
+:host {
+  display: block;
+  background: var(--sds-bg-neutralGrey-light2);
+  color: var(--sds-text-neutral-body);
+  font-family: 'Darwin Sans', 'Segoe UI', sans-serif;
+}
+
+/* ── Panel (full-width white content area, like the Agents tab) ── */
+.tab-panel {
+  background: var(--sds-bg-neutralWhite-default);
+}
+
+.panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sds-gap-16);
+  padding: var(--sds-padding-16) var(--sds-padding-24);
+}
+
+.panel-search {
+  width: min(360px, 100%);
+  border-radius: var(--sds-border-radius-4);
+}
+
+.panel-search input {
+  font-family: inherit;
+}
+
+.panel-search input::placeholder {
+  color: var(--sds-text-neutral-ghost);
+}
+
+.panel-search input:focus {
+  outline: none;
+}
+
+.toolbar-count {
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+/* ── Table ── */
+/* No clipping here, so the row action menu can overflow the table bounds. */
+.projects-table-wrap {
+  width: 100%;
+}
+
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: var(--sds-bg-neutralWhite-default);
+}
+
+.projects-table th {
+  height: 40px;
+  padding: 0 var(--sds-padding-24);
+  background: var(--sds-bg-neutralBlue-light1);
+  border-top: 1px solid var(--sds-border-neutralGrey-light2);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+  color: var(--sds-text-neutral-label);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: inherit;
+  font-size: var(--sds-body-s-medium-font-size);
+  font-weight: var(--sds-body-s-medium-font-weight);
+  line-height: var(--sds-body-s-medium-line-height);
+}
+
+.sort-head {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sds-gap-4);
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sort-caret {
+  transition: transform 120ms ease;
+}
+
+.sort-caret.is-asc {
+  transform: rotate(180deg);
+}
+
+.projects-table td {
+  padding: var(--sds-padding-12) var(--sds-padding-24);
+  border-bottom: 1px solid var(--sds-border-neutralGrey-light2);
+  color: var(--sds-text-neutral-body);
+  font-family: inherit;
+  font-size: var(--sds-body-m-book-font-size);
+  font-weight: var(--sds-body-m-book-font-weight);
+  line-height: var(--sds-body-m-book-line-height);
+  vertical-align: middle;
+}
+
+.project-row {
+  cursor: pointer;
+}
+
+.projects-table tbody tr:hover td {
+  background: var(--sds-bg-neutralGrey-light1);
+}
+
+/* Name is the click target — highlight it as a link on row hover/focus. */
+.projects-table tbody tr:hover .project-name,
+.projects-table tbody tr:focus-visible .project-name {
+  color: var(--sds-bg-neutralBlue-active);
+}
+
+.projects-table tbody tr:focus-visible {
+  outline: none;
+}
+
+.projects-table tbody tr:focus-visible td {
+  background: var(--sds-bg-neutralBlue-light1);
+  box-shadow: inset 0 0 0 1px var(--sds-border-neutralBlue-active);
+}
+
+.projects-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Name cell */
+.name-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sds-gap-12);
+}
+
+.project-identity {
+  flex: 1 1 auto;
+}
+
+.project-folder {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--sds-border-radius-8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.project-folder svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.project-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.project-name {
+  color: var(--sds-text-neutral-title);
+  font-weight: var(--sds-body-m-medium-font-weight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-desc {
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Person cells */
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.person-name {
+  color: var(--sds-text-neutral-body);
+}
+
+.person-id {
+  color: var(--sds-text-neutral-ghost);
+  font-size: var(--sds-body-s-book-font-size);
+  line-height: var(--sds-body-s-book-line-height);
+}
+
+.updated-cell {
+  color: var(--sds-text-neutral-label);
+}
+
+.muted-dash {
+  color: var(--sds-text-neutral-ghost);
+}
+
+.empty-row td {
+  text-align: center;
+  color: var(--sds-text-neutral-label);
+  padding: var(--sds-padding-24);
+}
+
+/* Column widths */
+.projects-table th:nth-child(1),
+.projects-table td:nth-child(1) {
+  width: 32%;
+}
+
+.projects-table th:nth-child(2),
+.projects-table td:nth-child(2) {
+  width: 8%;
+}
+
+.projects-table th:nth-child(3),
+.projects-table td:nth-child(3) {
+  width: 18%;
+}
+
+.projects-table th:nth-child(4),
+.projects-table td:nth-child(4) {
+  width: 18%;
+}
+
+.projects-table th:nth-child(5),
+.projects-table td:nth-child(5) {
+  width: 16%;
+}
+
+.projects-table .actions-head,
+.projects-table .actions-cell {
+  width: 4%;
+  min-width: 56px;
+}
+
+.actions-cell {
+  position: relative;
+  overflow: visible;
+}
+
+/* Lift the open row's actions cell (a positioned stacking context) above the
+   following rows so its action menu isn't painted over. z-index on <tr> is
+   unreliable in tables, so we raise the cell instead. */
+.projects-table tbody tr.is-menu-open .actions-cell {
+  z-index: 30;
+}
+
+.row-menu-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.row-menu-button {
+  border: none;
+  background: transparent;
+  color: var(--sds-text-neutral-ghost);
+  cursor: pointer;
+}
+
+.row-action-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 148px;
+  padding: var(--sds-padding-8) 0;
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
+  box-shadow: var(--sds-shadow-dropdown);
+}
+
+.row-action-item {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0 var(--sds-padding-12);
+  color: var(--sds-text-neutral-title);
+  font-family: inherit;
+  font-size: var(--sds-body-m-book-font-size);
+  line-height: var(--sds-body-m-book-line-height);
+  cursor: pointer;
+}
+
+.row-action-item:hover {
+  background: var(--sds-bg-neutralGrey-light2);
+}
+
+.row-action-item.is-danger {
+  color: var(--sds-text-feedback-error);
+}
+
+/* ── New Project modal ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--sds-bg-overlay-blanket);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sds-padding-24);
+}
+
+.modal-card {
+  width: min(560px, calc(100vw - var(--sds-padding-24) - var(--sds-padding-24)));
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralWhite-default);
+  box-shadow: var(--sds-shadow-dialog);
+  padding: var(--sds-padding-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-20);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--sds-padding-16);
+  right: var(--sds-padding-16);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--sds-border-radius-4);
+  background: transparent;
+  color: var(--sds-text-neutral-label);
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: var(--sds-bg-neutralGrey-light2);
+  color: var(--sds-text-neutral-title);
+}
+
+.modal-head {
+  padding-right: var(--sds-padding-32);
+}
+
+.modal-head h2 {
+  margin: 0;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-title-xxs-bold-font-size);
+  font-weight: var(--sds-title-xxs-bold-font-weight);
+  line-height: var(--sds-title-xxs-bold-line-height);
+}
+
+.modal-head p {
+  margin: var(--sds-gap-4) 0 0;
+  color: var(--sds-text-neutral-label);
+  font-size: var(--sds-body-m-book-font-size);
+  line-height: var(--sds-body-m-book-line-height);
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-8);
+}
+
+.modal-field label,
+.modal-field .field-label {
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-body-m-medium-font-size);
+  font-weight: var(--sds-body-m-medium-font-weight);
+  line-height: var(--sds-body-m-medium-line-height);
+}
+
+.modal-field input,
+.modal-field textarea {
+  width: 100%;
+  font-family: inherit;
+}
+
+.modal-field textarea {
+  resize: vertical;
+  min-height: 76px;
+}
+
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sds-gap-12);
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0;
+  cursor: pointer;
+  transition: box-shadow 120ms ease;
+}
+
+.color-swatch.is-selected {
+  box-shadow:
+    0 0 0 2px var(--sds-bg-neutralWhite-default),
+    0 0 0 4px var(--swatch, var(--sds-border-primary-default));
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sds-gap-8);
+  margin-top: var(--sds-gap-4);
+}
+
+/* ── Delete warning dialog ── */
+.delete-card {
+  width: min(460px, calc(100vw - var(--sds-padding-24) - var(--sds-padding-24)));
+}
+
+.delete-resource-list {
+  margin: 0;
+  padding: var(--sds-padding-12) var(--sds-padding-16);
+  list-style: none;
+  border: 1px solid var(--sds-border-neutralGrey-light2);
+  border-radius: var(--sds-border-radius-8);
+  background: var(--sds-bg-neutralGrey-light2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sds-gap-8);
+}
+
+.delete-resource-list li {
+  position: relative;
+  padding-left: var(--sds-padding-16);
+  color: var(--sds-text-neutral-body);
+  font-size: var(--sds-body-m-book-font-size);
+  line-height: var(--sds-body-m-book-line-height);
+}
+
+.delete-resource-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--sds-text-neutral-ghost);
+}
+
+.delete-confirm-text {
+  margin: 0;
+  color: var(--sds-text-neutral-title);
+  font-size: var(--sds-body-m-medium-font-size);
+  font-weight: var(--sds-body-m-medium-font-weight);
+  line-height: var(--sds-body-m-medium-line-height);
+}
+
+.modal-actions .danger-confirm {
+  background: var(--sds-bg-feedback-errorHigh) !important;
+  border-color: var(--sds-bg-feedback-errorHigh) !important;
+}
+
+@media (max-width: 1180px) {
+  .projects-table-wrap {
+    overflow-x: auto;
+  }
+
+  .projects-table {
+    min-width: 880px;
+  }
+}

@@ -1,11 +1,175 @@
-<main class="feature-shell" aria-label="Knowledge Base module">
-  <a routerLink="/" class="feature-back">Back to home</a>
+<!-- Knowledge Base list. Topbar + product nav + sub-tabs + "New Knowledge Base"
+     CTA come from the shared AppShell. -->
+<div class="page-shell">
+  <section class="tab-panel">
+    <div class="panel-toolbar">
+      <label class="panel-search" sdsSearchField for="kb-search-input">
+        <input
+          id="kb-search-input"
+          type="search"
+          placeholder="Search here"
+          [value]="searchValue()"
+          (input)="onSearchInput($any($event.target).value)"
+        />
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+      </label>
 
-  <section class="feature-card">
-    <p class="feature-eyebrow">Angular module</p>
-    <h1>Knowledge Base</h1>
-    <p>
-      Placeholder screen for SDS-based knowledge source setup, indexing policies, and retrieval controls.
-    </p>
+      <div class="toolbar-right">
+        <div class="status-filter" sdsSelect [value]="statusFilter()" (valueChange)="onStatusFilterChange($event)">
+          <sds-select-trigger>
+            <span class="select-display-label">{{ currentStatusLabel() }}</span>
+          </sds-select-trigger>
+          <sds-select-content *sdsSelectPortal>
+            @for (option of statusOptions; track option.value) {
+              <sds-select-item [value]="option.value">{{ option.label }}</sds-select-item>
+            }
+          </sds-select-content>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-table-wrap">
+      <table class="data-table" aria-label="Knowledge bases">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Documents</th>
+            <th>Data Sources</th>
+            <th>Status</th>
+            <th>Created On</th>
+            <th class="actions-head">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (kb of visible(); track trackKb($index, kb)) {
+            <tr
+              class="kb-row"
+              [class.is-menu-open]="isMenuOpen(kb.id)"
+              role="button"
+              tabindex="0"
+              (click)="openKb(kb)"
+              (keydown.enter)="openKb(kb)"
+            >
+              <td><span class="link-name">{{ kb.name }}</span></td>
+              <td>{{ kb.documents }}</td>
+              <td>{{ kb.dataSources }}</td>
+              <td>
+                <span class="status-pill" [attr.data-status]="kb.status.toLowerCase()">{{ kb.status }}</span>
+              </td>
+              <td class="muted-cell">{{ kb.createdOn }}</td>
+              <td class="actions-cell">
+                <div class="row-menu-anchor">
+                  <button
+                    type="button"
+                    class="row-menu-button"
+                    sdsIconButton
+                    variant="ghost"
+                    size="xs"
+                    aria-label="More actions"
+                    [attr.aria-expanded]="isMenuOpen(kb.id)"
+                    (click)="toggleMenu(kb.id, $event)"
+                  >
+                    <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                  </button>
+
+                  @if (isMenuOpen(kb.id)) {
+                    <div
+                      class="row-action-menu"
+                      role="menu"
+                      aria-label="Knowledge base actions"
+                      [style.top.px]="menuPos()?.top"
+                      [style.right.px]="menuPos()?.right"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <button type="button" class="row-action-item" role="menuitem" (click)="onEdit(kb, $event)">Edit</button>
+                      <button type="button" class="row-action-item is-danger" role="menuitem" (click)="requestDelete(kb, $event)">Delete</button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr class="empty-row">
+              <td colspan="6">No knowledge bases match your search.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </section>
-</main>
+
+  @if (pendingDelete(); as kb) {
+    <div class="modal-backdrop" role="presentation" (click)="cancelDelete()">
+      <section
+        class="modal-card"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="kb-delete-title"
+        (click)="$event.stopPropagation()"
+      >
+        <button type="button" class="modal-close" aria-label="Close" (click)="cancelDelete()">
+          <app-sds-icon name="x" [size]="18"></app-sds-icon>
+        </button>
+        <header class="modal-head">
+          <h2 id="kb-delete-title">Delete “{{ kb.name }}”?</h2>
+          <p>This knowledge base and its indexed documents will be removed. This can’t be undone.</p>
+        </header>
+        <div class="modal-actions">
+          <button type="button" sdsButton variant="secondary" (click)="cancelDelete()">Cancel</button>
+          <button type="button" sdsButton variant="primary" class="danger-confirm" (click)="confirmDelete()">Delete</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (isDrawerOpen()) {
+    <div class="drawer-backdrop" role="presentation" (click)="closeDrawer()">
+      <aside
+        class="drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="kb-drawer-title"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="drawer-head">
+          <h2 id="kb-drawer-title">Knowledge Base</h2>
+          <button type="button" class="drawer-close" aria-label="Close" (click)="closeDrawer()">
+            <app-sds-icon name="x" [size]="18"></app-sds-icon>
+          </button>
+        </header>
+
+        <div class="drawer-body">
+          <div class="drawer-field">
+            <label for="kb-name">Name <span class="req">*</span></label>
+            <input
+              id="kb-name"
+              sdsInput
+              type="text"
+              placeholder="New KB"
+              [value]="formName()"
+              (input)="formName.set($any($event.target).value)"
+              (keydown.enter)="submitCreate()"
+            />
+          </div>
+
+          <div class="drawer-field">
+            <label for="kb-desc">Description</label>
+            <textarea
+              id="kb-desc"
+              sdsTextarea
+              rows="4"
+              placeholder="Short description"
+              [value]="formDescription()"
+              (input)="formDescription.set($any($event.target).value)"
+            ></textarea>
+          </div>
+        </div>
+
+        <footer class="drawer-foot">
+          <button type="button" sdsButton variant="secondary" (click)="closeDrawer()">Cancel</button>
+          <button type="button" sdsButton variant="primary" [disabled]="!canCreate()" (click)="submitCreate()">Create</button>
+        </footer>
+      </aside>
+    </div>
+  }
+</div>

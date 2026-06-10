@@ -1,0 +1,246 @@
+<!-- Projects leaf content. Topbar + product nav + section sub-tabs + the
+     "New Project" CTA are provided by the shared AppShell (same as the Agents
+     tab); this page renders just the toolbar + table. -->
+<div class="page-shell">
+  <section class="tab-panel">
+    <div class="panel-toolbar">
+      <label class="panel-search" sdsSearchField for="project-search-input">
+        <input
+          id="project-search-input"
+          type="search"
+          placeholder="Search projects by name or description"
+          [value]="searchValue()"
+          (input)="onSearchInput($any($event.target).value)"
+        />
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+      </label>
+
+      <span class="toolbar-count">{{ visibleProjects().length }} projects</span>
+    </div>
+
+    <div class="projects-table-wrap">
+      <table class="projects-table" aria-label="Projects">
+        <thead>
+          <tr>
+            <th>
+              <button type="button" class="sort-head" (click)="toggleSort('name')">
+                Name
+                @if (isSorted('name')) {
+                  <app-sds-icon class="sort-caret" [class.is-asc]="sortDir() === 'asc'" name="chevron-down" [size]="14"></app-sds-icon>
+                }
+              </button>
+            </th>
+            <th>Agents</th>
+            <th>Created By</th>
+            <th>Last Updated By</th>
+            <th>
+              <button type="button" class="sort-head" (click)="toggleSort('updatedAt')">
+                Last Updated On
+                @if (isSorted('updatedAt')) {
+                  <app-sds-icon class="sort-caret" [class.is-asc]="sortDir() === 'asc'" name="chevron-down" [size]="14"></app-sds-icon>
+                }
+              </button>
+            </th>
+            <th class="actions-head" aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (project of visibleProjects(); track trackProject($index, project)) {
+            <tr
+              class="project-row"
+              [class.is-menu-open]="isMenuOpen(project.id)"
+              role="button"
+              tabindex="0"
+              (click)="openProject(project, $event)"
+              (keydown.enter)="openProject(project, $event)"
+              (keydown.space)="openProject(project, $event)"
+            >
+              <td class="name-cell">
+                <div class="name-inner">
+                  <span class="project-folder" [style.background]="folderTint(project.colorId)" [style.color]="folderColor(project.colorId)">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h3.382a2 2 0 0 1 1.414.586L11.83 6H18.5A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z" />
+                    </svg>
+                  </span>
+                  <span class="project-identity">
+                    <span class="project-name">{{ project.name }}</span>
+                    @if (project.description) {
+                      <span class="project-desc">{{ project.description }}</span>
+                    }
+                  </span>
+                </div>
+              </td>
+              <td>{{ project.agentCount }}</td>
+              <td>
+                <span class="person">
+                  <span class="person-name">{{ project.createdByName }}</span>
+                  <span class="person-id">{{ project.createdByEmpId }}</span>
+                </span>
+              </td>
+              <td>
+                @if (project.updatedByName) {
+                  <span class="person">
+                    <span class="person-name">{{ project.updatedByName }}</span>
+                    <span class="person-id">{{ project.updatedByEmpId }}</span>
+                  </span>
+                } @else {
+                  <span class="muted-dash">—</span>
+                }
+              </td>
+              <td class="updated-cell">{{ project.updatedOn }}</td>
+              <td class="actions-cell">
+                <div class="row-menu-anchor">
+                  <button
+                    type="button"
+                    class="row-menu-button"
+                    sdsIconButton
+                    variant="ghost"
+                    size="xs"
+                    aria-label="More actions"
+                    [attr.aria-expanded]="isMenuOpen(project.id)"
+                    (click)="toggleMenu(project.id, $event)"
+                  >
+                    <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                  </button>
+
+                  @if (isMenuOpen(project.id)) {
+                    <div
+                      class="row-action-menu"
+                      role="menu"
+                      aria-label="Project actions"
+                      [style.top.px]="menuPos()?.top"
+                      [style.right.px]="menuPos()?.right"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <button type="button" class="row-action-item is-danger" role="menuitem" (click)="requestDelete(project, $event)">
+                        Delete project
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr class="empty-row">
+              <td colspan="6">No projects match your search.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if (pendingDeleteProject(); as project) {
+    <div class="modal-backdrop" role="presentation" (click)="cancelDelete()">
+      <section
+        class="modal-card delete-card"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-project-title"
+        (click)="$event.stopPropagation()"
+      >
+        <button type="button" class="modal-close" aria-label="Close" (click)="cancelDelete()">
+          <app-sds-icon name="x" [size]="18"></app-sds-icon>
+        </button>
+
+        <header class="modal-head">
+          <h2 id="delete-project-title">Delete “{{ project.name }}”?</h2>
+          @if (hasResources(project)) {
+            <p>This project still contains the following resources, which will also be removed:</p>
+          } @else {
+            <p>This project is empty. Deleting it can’t be undone.</p>
+          }
+        </header>
+
+        @if (hasResources(project)) {
+          <ul class="delete-resource-list">
+            @for (line of deleteResourceLines(project); track line) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        }
+
+        <p class="delete-confirm-text">Do you want to continue?</p>
+
+        <div class="modal-actions">
+          <button type="button" sdsButton variant="secondary" (click)="cancelDelete()">Cancel</button>
+          <button type="button" sdsButton variant="primary" class="danger-confirm" (click)="confirmDelete()">
+            Delete project
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (isModalOpen()) {
+    <div class="modal-backdrop" role="presentation" (click)="closeCreate()">
+      <section
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-project-title"
+        (click)="$event.stopPropagation()"
+      >
+        <button type="button" class="modal-close" aria-label="Close" (click)="closeCreate()">
+          <app-sds-icon name="x" [size]="18"></app-sds-icon>
+        </button>
+
+        <header class="modal-head">
+          <h2 id="new-project-title">New Project</h2>
+          <p>Create a project to group agents, knowledge bases, and other resources.</p>
+        </header>
+
+        <div class="modal-field">
+          <label for="project-name">Name</label>
+          <input
+            id="project-name"
+            sdsInput
+            type="text"
+            placeholder="e.g. HR Assistant"
+            [value]="formName()"
+            (input)="formName.set($any($event.target).value)"
+            (keydown.enter)="submitCreate()"
+          />
+        </div>
+
+        <div class="modal-field">
+          <label for="project-description">Description (optional)</label>
+          <textarea
+            id="project-description"
+            sdsTextarea
+            rows="3"
+            placeholder="Short description"
+            [value]="formDescription()"
+            (input)="formDescription.set($any($event.target).value)"
+          ></textarea>
+        </div>
+
+        <div class="modal-field">
+          <span class="field-label">Color</span>
+          <div class="color-swatches" role="radiogroup" aria-label="Project color">
+            @for (color of colors; track color.id) {
+              <button
+                type="button"
+                class="color-swatch"
+                role="radio"
+                [attr.aria-checked]="formColorId() === color.id"
+                [attr.aria-label]="color.label"
+                [class.is-selected]="formColorId() === color.id"
+                [style.background]="color.hex"
+                [style.--swatch]="color.hex"
+                (click)="selectColor(color.id)"
+              ></button>
+            }
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" sdsButton variant="secondary" (click)="closeCreate()">Cancel</button>
+          <button type="button" sdsButton variant="primary" [disabled]="!canCreate()" (click)="submitCreate()">
+            Create project
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

@@ -1,13 +1,18 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
+import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { SdsAppTopbarComponent } from '../shared/app-shell/sds-app-topbar.component';
 import { SdsIconComponent } from '../shared/icons/sds-icon.component';
 import { ChatTraceLinkComponent } from '../shared/trace/chat-trace-link.component';
 import { cloneTraceStepsForResponse, getTraceCase, pickTraceCaseIdForPrompt } from '../shared/trace/trace.mock';
 import { TraceLogPanelComponent } from '../shared/trace/trace-log-panel.component';
 import { TraceStep } from '../shared/trace/trace.types';
+import { ScriptTurn, buildAgentScript } from './agent-chat-script';
+
+interface SuggestedTurn extends ScriptTurn {
+  index: number;
+}
 
 interface AgentChatMessage {
   id: string;
@@ -22,7 +27,6 @@ interface AgentChatMessage {
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     SdsAppTopbarComponent,
     SdsIconComponent,
     ChatTraceLinkComponent,
@@ -33,35 +37,47 @@ interface AgentChatMessage {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AgentTestScreenComponent {
+  private readonly location = inject(Location);
+  private readonly route = inject(ActivatedRoute);
+  @ViewChild('chatThread') private chatThread?: ElementRef<HTMLElement>;
+
+  private scrollToLatest(): void {
+    setTimeout(() => {
+      const el = this.chatThread?.nativeElement;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+  }
+
+  // Agent name comes from the launching page (Test links pass ?name=). Falls
+  // back gracefully so the screen still works when opened directly.
+  readonly agentName = this.route.snapshot.queryParamMap.get('name')?.trim() || 'your agent';
+  private readonly script = buildAgentScript(this.agentName);
+
   readonly globalSearch = signal('');
-  readonly composerText = signal('How can i');
+  readonly composerText = signal('');
   readonly selectedResponseId = signal<string | null>(null);
   readonly tracePanelExpanded = signal(false);
 
+  // The scripted demo starts with just the agent's greeting; suggested prompts
+  // (below) drive the rest of the ~10-turn conversation.
   readonly messages = signal<AgentChatMessage[]>([
     {
-      id: 'user-default-1',
-      role: 'user',
-      text: 'How can i onboard a new employee and setup a buddy.',
-    },
-    {
-      id: 'assistant-default-1',
+      id: 'assistant-greeting',
       role: 'assistant',
-      text: 'Ok, let me know what are the candidate details along with the resume attached so that I can attach the correct details into the system.',
-      traceSteps: cloneTraceStepsForResponse('simple-llm-response', 'assistant-default-1'),
-    },
-    {
-      id: 'user-default-2',
-      role: 'user',
-      text: 'How can i onboard a new employee and setup a buddy.',
-    },
-    {
-      id: 'assistant-default-2',
-      role: 'assistant',
-      text: 'Ok, let me know what are the candidate details along with the resume attached so that I can attach the correct details into the system.',
-      traceSteps: cloneTraceStepsForResponse('file-resume-parse', 'assistant-default-2'),
+      text: this.script.greeting,
+      traceSteps: cloneTraceStepsForResponse('simple-llm-response', 'assistant-greeting', this.script.greeting),
     },
   ]);
+
+  // How many scripted turns have been used; suggestions show the next few.
+  readonly scriptCursor = signal(0);
+  readonly suggestions = computed<SuggestedTurn[]>(() =>
+    this.script.turns
+      .map((turn, index) => ({ ...turn, index }))
+      .slice(this.scriptCursor(), this.scriptCursor() + 3),
+  );
 
   readonly selectedTraceSteps = computed(() => {
     const responseId = this.selectedResponseId();
@@ -70,8 +86,9 @@ export class AgentTestScreenComponent {
   });
 
   openTrace(responseId: string): void {
+    // Only switch which trace is shown. Keep the current expanded/collapsed
+    // state so navigating between traces doesn't collapse an expanded panel.
     this.selectedResponseId.set(responseId);
-    this.tracePanelExpanded.set(false);
   }
 
   closeTrace(): void {
@@ -81,6 +98,11 @@ export class AgentTestScreenComponent {
 
   onTraceExpandedChange(expanded: boolean): void {
     this.tracePanelExpanded.set(expanded);
+  }
+
+  // Return to wherever Test was launched from (the agent detail page).
+  goBack(): void {
+    this.location.back();
   }
 
   sendMessage(): void {
@@ -99,10 +121,31 @@ export class AgentTestScreenComponent {
         id: responseId,
         role: 'assistant',
         text: traceCase.assistantResponse,
-        traceSteps: cloneTraceStepsForResponse(caseId, responseId),
+        traceSteps: cloneTraceStepsForResponse(caseId, responseId, traceCase.assistantResponse),
       },
     ]);
     this.composerText.set('');
+    this.scrollToLatest();
+  }
+
+  /** Send a scripted suggestion: appends the user prompt + its canned reply. */
+  sendSuggestion(turn: SuggestedTurn): void {
+    const now = Date.now();
+    const responseId = `assistant-${now}`;
+
+    this.messages.update((messages) => [
+      ...messages,
+      { id: `user-${now}`, role: 'user', text: turn.prompt },
+      {
+        id: responseId,
+        role: 'assistant',
+        text: turn.response,
+        traceSteps: cloneTraceStepsForResponse(turn.traceCaseId, responseId, turn.response),
+      },
+    ]);
+    // Advance past the chosen turn so the next suggestions follow on.
+    this.scriptCursor.set(turn.index + 1);
+    this.scrollToLatest();
   }
 
   onComposerKeydown(event: KeyboardEvent): void {

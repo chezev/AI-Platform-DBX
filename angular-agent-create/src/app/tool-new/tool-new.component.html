@@ -1,0 +1,342 @@
+<div class="tool-new">
+  <app-sds-topbar
+    searchId="tool-new-global-search"
+    [searchValue]="globalSearch()"
+    (searchValueChange)="globalSearch.set($event)"
+  ></app-sds-topbar>
+
+  <nav class="tn-subheader" aria-label="New tool header">
+    @if (mode() === 'browse') {
+      <div class="tn-subheader-left">
+        <button type="button" class="back-btn" aria-label="Back" (click)="goBack()"><app-sds-icon name="arrow-left" [size]="14"></app-sds-icon></button>
+        <span class="tn-title">New Tool</span>
+      </div>
+      <div class="tn-subheader-right">
+        <button type="button" sdsButton variant="inverse-secondary" (click)="cancel()">Cancel</button>
+        <button type="button" sdsButton variant="inverse-primary" disabled>Add Tool</button>
+      </div>
+    } @else {
+      <div class="tn-subheader-left">
+        <span class="tn-crumb"><a (click)="goBack()">Add New Tool</a> <span class="crumb-sep">/</span> <strong>{{ selectedTool()?.name }}</strong></span>
+      </div>
+      <div class="tn-subheader-right">
+        @if (wizardStep() === 1) {
+          <button type="button" sdsButton variant="inverse-secondary" (click)="cancel()">Cancel</button>
+          <button type="button" sdsButton variant="inverse-primary" (click)="next()">Next</button>
+        } @else {
+          <button type="button" sdsButton variant="inverse-secondary" (click)="back()">Back</button>
+          <button type="button" sdsButton variant="inverse-primary" [disabled]="!hasAddedTools()" (click)="addTool()">Add Tool</button>
+        }
+      </div>
+    }
+  </nav>
+
+  @if (mode() === 'browse') {
+    <!-- ══ Browse tools ══ -->
+    <div class="tn-body">
+      <aside class="tn-sidebar" aria-label="Browse tools">
+        <div class="sidebar-head">
+          <h2>Browse Tools</h2>
+          <app-sds-icon name="search" [size]="16"></app-sds-icon>
+        </div>
+        <button type="button" class="nav-item is-active"><app-sds-icon name="hamburger-menu" [size]="16"></app-sds-icon> All Tools</button>
+        <p class="nav-label">Connectors</p>
+        <button type="button" class="nav-item"><app-sds-icon name="layout-template" [size]="16"></app-sds-icon> Project Management</button>
+        <button type="button" class="nav-item"><app-sds-icon name="database" [size]="16"></app-sds-icon> Data Engagement</button>
+        <p class="nav-label">Utilities</p>
+        <button type="button" class="nav-item">
+          <svg class="util-glyph" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
+          Code Block
+        </button>
+        <button type="button" class="nav-item"><app-sds-icon name="bot" [size]="16"></app-sds-icon> Agent</button>
+        <button type="button" class="nav-item">
+          <svg class="util-glyph" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          API Connection
+        </button>
+      </aside>
+
+      <main class="tn-browse">
+        <h1 class="browse-heading">Search for Tools &amp; Add</h1>
+        <label class="browse-search" sdsSearchField for="tn-browse-search">
+          <app-sds-icon name="search" [size]="16"></app-sds-icon>
+          <input id="tn-browse-search" type="search" placeholder="Search" [value]="browseSearch()" (input)="onBrowseSearch($any($event.target).value)" />
+          @if (browseSearch()) {
+            <button type="button" class="search-clear" aria-label="Clear" (click)="clearBrowseSearch()"><app-sds-icon name="circle-x" [size]="16"></app-sds-icon></button>
+          }
+        </label>
+
+        @if (browseSearch()) {
+          <p class="result-label">Search Result ({{ searchResults().length }})</p>
+          <div class="tool-grid">
+            @for (t of searchResults(); track t.name) {
+              <button type="button" class="tool-card" (click)="pickTool(t)">
+                <div class="tool-card-top">
+                  @if (t.kind === 'connector') {
+                    <img class="tool-logo" [src]="t.logo" [alt]="t.name" />
+                  } @else {
+                    <span class="tool-util-icon">
+                      @switch (t.utilityIcon) {
+                        @case ('code') { <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg> }
+                        @case ('api') { <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> }
+                        @default { <app-sds-icon name="bot" [size]="18"></app-sds-icon> }
+                      }
+                    </span>
+                  }
+                  <span class="tool-name">{{ t.name }}</span>
+                </div>
+                <p class="tool-desc">{{ t.desc }}</p>
+              </button>
+            } @empty {
+              <p class="no-results">No tools found.</p>
+            }
+          </div>
+        } @else {
+          <section class="tool-section">
+            <h2 class="section-title">Utilities</h2>
+            <div class="tool-grid">
+              @for (t of utilities; track t.name) {
+                <button type="button" class="tool-card" (click)="pickTool(t)">
+                  <div class="tool-card-top">
+                    <span class="tool-util-icon">
+                      @switch (t.utilityIcon) {
+                        @case ('code') { <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg> }
+                        @case ('api') { <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> }
+                        @default { <app-sds-icon name="bot" [size]="18"></app-sds-icon> }
+                      }
+                    </span>
+                    <span class="tool-name">{{ t.name }}</span>
+                  </div>
+                  <p class="tool-desc">{{ t.desc }}</p>
+                </button>
+              }
+            </div>
+          </section>
+
+          <section class="tool-section">
+            <h2 class="section-title">Connectors</h2>
+            <div class="tool-grid">
+              @for (t of connectors; track t.name) {
+                <button type="button" class="tool-card" (click)="pickTool(t)">
+                  <div class="tool-card-top">
+                    <img class="tool-logo" [src]="t.logo" [alt]="t.name" />
+                    <span class="tool-name">{{ t.name }}</span>
+                    @if (t.connected) { <app-sds-icon class="tool-check" name="circle-check" [size]="16"></app-sds-icon> }
+                  </div>
+                  <p class="tool-desc">{{ t.desc }}</p>
+                </button>
+              }
+            </div>
+          </section>
+        }
+      </main>
+    </div>
+  } @else {
+    <!-- ══ Connect wizard ══ -->
+    <div class="tn-wizard">
+      <div class="step-indicator">
+        <div class="step" [class.is-active]="wizardStep() === 1" [class.is-done]="wizardStep() > 1">
+          <span class="step-num">@if (wizardStep() > 1) { <app-sds-icon name="check" [size]="16"></app-sds-icon> } @else { 1 }</span>
+          <span class="step-label">Add Connector</span>
+        </div>
+        <span class="step-line" [class.is-done]="wizardStep() > 1"></span>
+        <div class="step" [class.is-active]="wizardStep() === 2">
+          <span class="step-num">2</span>
+          <span class="step-label">Add Tools</span>
+        </div>
+      </div>
+
+      @if (wizardStep() === 1) {
+        <section class="cred-card">
+          <h2 class="cred-card-title">App Credentials</h2>
+          <div class="cred-mode" role="radiogroup" aria-label="App credentials mode">
+            <label class="cred-radio">
+              <input type="radio" name="credMode" [checked]="credMode() === 'existing'" (change)="credMode.set('existing')" />
+              <span>Use Existing</span>
+            </label>
+            <label class="cred-radio">
+              <input type="radio" name="credMode" [checked]="credMode() === 'new'" (change)="credMode.set('new')" />
+              <span>Add New</span>
+            </label>
+          </div>
+
+          @if (credMode() === 'existing') {
+            <table class="cred-table">
+              <thead><tr><th class="cred-radio-col"></th><th>ID</th><th>Name</th><th class="cred-actions-col">Actions</th></tr></thead>
+              <tbody>
+                @for (cred of credentials(); track cred.id) {
+                  <tr [class.is-selected]="selectedCredId() === cred.id" (click)="selectCredential(cred.id)">
+                    <td class="cred-radio-col"><input type="radio" name="credSel" [checked]="selectedCredId() === cred.id" (change)="selectCredential(cred.id)" /></td>
+                    <td>{{ cred.id | slice: 0:8 }}…</td>
+                    <td>{{ cred.name }}</td>
+                    <td class="cred-actions-col"><button type="button" class="cred-trash" aria-label="Delete" (click)="deleteCredential(cred.id, $event)"><app-sds-icon name="trash" [size]="16"></app-sds-icon></button></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="cred-form">
+              <div class="field">
+                <label for="cred-name">Name</label>
+                <input id="cred-name" sdsInput type="text" placeholder="e.g. Jira Connect" [value]="credName()" (input)="credName.set($any($event.target).value)" />
+              </div>
+              <div class="auth-toggle">
+                <button type="button" class="auth-tab" [class.is-active]="authMode() === 'secret'" (click)="authMode.set('secret')">Client Secret</button>
+                <button type="button" class="auth-tab" [class.is-active]="authMode() === 'cert'" (click)="authMode.set('cert')">Certificate Authentication</button>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="cred-event">Event Type</label>
+                  <input id="cred-event" sdsInput type="text" placeholder="new@newmail.com" [value]="eventType()" (input)="eventType.set($any($event.target).value)" />
+                </div>
+                <div class="field">
+                  <label for="cred-trigger">Trigger Event</label>
+                  <input id="cred-trigger" sdsInput type="password" placeholder="••••••••••••" [value]="triggerEvent()" (input)="triggerEvent.set($any($event.target).value)" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="cred-dir">SharePoint Directory ID</label>
+                <input id="cred-dir" sdsInput type="text" placeholder="Azure AD Tenant / Directory UUID" [value]="sharepointDir()" (input)="sharepointDir.set($any($event.target).value)" />
+              </div>
+            </div>
+          }
+        </section>
+      } @else {
+        <div class="ops-layout">
+          <aside class="ops-panel">
+            <div class="ops-panel-head">
+              <h2>Add Tool Operations</h2>
+              <div class="ops-panel-actions">
+                <button type="button" class="bordered-btn" (click)="openAddTools()"><app-sds-icon name="add" [size]="14"></app-sds-icon> New</button>
+                <button type="button" class="bordered-btn icon-only" aria-label="Options"><app-sds-icon name="kebab" [size]="16"></app-sds-icon></button>
+              </div>
+            </div>
+
+            @if (hasAddedTools()) {
+              <label class="ops-search" sdsSearchField for="ops-search">
+                <input id="ops-search" type="search" placeholder="Search here" [value]="opSearch()" (input)="opSearch.set($any($event.target).value)" />
+                <app-sds-icon name="search" [size]="16"></app-sds-icon>
+              </label>
+              <div class="ops-list">
+                @for (group of addedGroups(); track group.module) {
+                  <p class="ops-group-label">{{ group.module }} ({{ group.ops.length }})</p>
+                  @for (op of group.ops; track op.id) {
+                    <button type="button" class="ops-item" [class.is-active]="activeOpId() === op.id" (click)="setActiveOp(op.id)">
+                      <span class="ops-item-name">{{ op.name }}</span>
+                      <span class="ops-item-id">{{ op.id }}</span>
+                    </button>
+                  }
+                }
+              </div>
+            }
+          </aside>
+
+          <main class="ops-main">
+            @if (hasAddedTools() && activeOp(); as op) {
+              <div class="op-config">
+                <h3 class="op-name">{{ op.name }}</h3>
+                <code class="op-id">{{ op.id }}</code>
+
+                <section class="op-section">
+                  <h4>API Endpoints</h4>
+                  <code class="op-endpoint">{{ op.endpoint }}</code>
+                </section>
+
+                <section class="op-section">
+                  <h4>Original description</h4>
+                  <p class="op-text">{{ op.desc }}</p>
+                </section>
+
+                <section class="op-section">
+                  <h4>Description Override <app-sds-icon class="info-i" name="info" [size]="14"></app-sds-icon></h4>
+                  <textarea class="op-override" rows="4" placeholder="Replace the LLM-facing description for this tool..." [value]="descriptionOverride()" (input)="descriptionOverride.set($any($event.target).value)"></textarea>
+                  <small class="op-hint">The agent uses this instead of the original</small>
+                </section>
+
+                <section class="op-section">
+                  <div class="ot-head">
+                    <div>
+                      <h4>Output transform</h4>
+                      <p class="op-text">Run Python on the raw API response before the agent sees it</p>
+                    </div>
+                    <label class="ot-toggle">
+                      Enable
+                      <button type="button" class="switch" [class.is-on]="outputTransformEnabled()" role="switch" [attr.aria-checked]="outputTransformEnabled()" (click)="outputTransformEnabled.set(!outputTransformEnabled())"><span class="switch-knob"></span></button>
+                    </label>
+                  </div>
+                  <p class="op-mono-hint">Define execute(tool_output, context=None) returning dict | str.</p>
+                  @if (outputTransformEnabled()) {
+                    <textarea class="code-editor" rows="8" spellcheck="false" [value]="codeText()" (input)="codeText.set($any($event.target).value)"></textarea>
+                  } @else {
+                    <pre class="code-block">{{ codeText() }}</pre>
+                  }
+                </section>
+              </div>
+            } @else {
+              <div class="ops-empty">
+                <span class="ops-empty-art">
+                  <svg viewBox="0 0 64 64" width="120" height="120" fill="none"><path d="M12 28 32 20l20 8-20 8z" fill="#1f6feb"/><path d="M12 28v16l20 8V36z" fill="#0b2a52"/><path d="M52 28v16l-20 8V36z" fill="#3b82f6"/><path d="M30 8v8M34 10l4 4M26 10l-4 4" stroke="#1f6feb" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                <h3>No tools connected yet</h3>
+                <p>Tools give your agent the ability to do things query, update, notify and automate across the platform</p>
+                <button type="button" sdsButton variant="secondary" (click)="openAddTools()"><app-sds-icon name="add" [size]="16"></app-sds-icon> Add</button>
+              </div>
+            }
+          </main>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Add Tools right panel -->
+  @if (addToolsModalOpen()) {
+    <div class="panel-backdrop" role="presentation" (click)="closeAddTools()">
+      <section class="add-tools-panel" role="dialog" aria-modal="true" aria-labelledby="add-tools-title" (click)="$event.stopPropagation()">
+        <header class="at-head">
+          <h2 id="add-tools-title">Add Tools</h2>
+          <button type="button" class="modal-close" aria-label="Close" (click)="closeAddTools()"><app-sds-icon name="x" [size]="18"></app-sds-icon></button>
+        </header>
+
+        <div class="at-body">
+          <aside class="at-modules">
+            @for (m of modules(); track m.name) {
+              <button type="button" class="at-module" [class.is-active]="activeModule() === m.name" (click)="activeModule.set(m.name)">
+                <span>{{ m.name }}</span>
+                <span class="at-module-count" [class.is-primary]="m.name === 'All Modules'">{{ m.count }}</span>
+              </button>
+            }
+          </aside>
+
+          <div class="at-tools">
+            <label class="at-search" sdsSearchField for="at-search">
+              <input id="at-search" type="search" placeholder="Search Tools" [value]="modalSearch()" (input)="modalSearch.set($any($event.target).value)" />
+              <app-sds-icon name="search" [size]="16"></app-sds-icon>
+            </label>
+
+            <label class="at-selectall">
+              <input type="checkbox" [checked]="allVisibleSelected()" (change)="toggleSelectAll()" />
+              <span>Select All</span>
+            </label>
+            <div class="at-divider"></div>
+
+            <div class="at-list">
+              @for (op of modalVisibleOps(); track op.id) {
+                <label class="at-op">
+                  <input type="checkbox" [checked]="isModalOpChecked(op.id)" (change)="toggleModalOp(op.id)" />
+                  <span class="at-op-text">
+                    <span class="at-op-name">{{ op.name }}</span>
+                    <span class="at-op-id">{{ op.id }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+          </div>
+        </div>
+
+        <footer class="at-foot">
+          <button type="button" sdsButton variant="secondary" (click)="closeAddTools()">Cancel</button>
+          <button type="button" sdsButton variant="primary" (click)="confirmAddTools()">Add</button>
+        </footer>
+      </section>
+    </div>
+  }
+</div>

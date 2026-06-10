@@ -1,12 +1,10 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { BrnTabsImports } from '@spartan-ng/brain/tabs';
+import { ActivatedRoute, Router } from '@angular/router';
 import { shareReplay, switchMap } from 'rxjs';
 import { AgentApiService } from '../core/agent-api.service';
-import { AgentFilterState, AgentStatus, AgentSummary, AgentViewMode } from '../core/agent-api.types';
-import { SdsAppTopbarComponent } from '../shared/app-shell/sds-app-topbar.component';
+import { AgentFilterState, AgentListQuery, AgentStatus, AgentSummary, AgentViewMode } from '../core/agent-api.types';
 import { SdsIconComponent } from '../shared/icons/sds-icon.component';
 import { SdsButtonComponent, SdsIconButtonComponent } from '../shared/spartan/sds-button';
 import { SdsSearchFieldDirective } from '../shared/spartan/sds-layout';
@@ -23,7 +21,7 @@ interface FilterOption {
   value: AgentFilterState;
 }
 
-type AgentAction = 'Activate' | 'Deactivate' | 'View';
+type AgentAction = 'Activate' | 'Deactivate' | 'View' | 'Delete';
 
 @Component({
   selector: 'app-agent-creation-list',
@@ -31,9 +29,6 @@ type AgentAction = 'Activate' | 'Deactivate' | 'View';
   imports: [
     AsyncPipe,
     CommonModule,
-    RouterLink,
-    BrnTabsImports,
-    SdsAppTopbarComponent,
     SdsIconComponent,
     SdsButtonComponent,
     SdsIconButtonComponent,
@@ -67,13 +62,15 @@ export class AgentCreationListComponent implements OnInit, OnDestroy {
   readonly stateFilter = signal<AgentFilterState>('all');
   readonly viewMode = signal<AgentViewMode>('grid');
   readonly activeModuleTab = signal<(typeof this.moduleTabs)[number]>('agents');
-  readonly agentTotalCount = this.agentApi.getAgentTotalCount();
+  readonly agentTotalCount = signal(this.agentApi.getAgentTotalCount());
   readonly defaultAuditTimestamp = '27/01/2026, 11:54:12 PM';
   readonly defaultUpdatedBy = 'Admin';
 
   private readonly statusOverrides = signal<Record<string, AgentStatus>>({});
+  private readonly refreshVersion = signal(0);
   readonly openMenuAgentId = signal<string | null>(null);
   readonly highlightedAgentId = signal<string | null>(null);
+  readonly pendingDeleteAgent = signal<AgentSummary | null>(null);
 
   private readonly projectNameOverrides: Record<string, string> = {
     'agt-001': 'Work Productivity',
@@ -88,15 +85,44 @@ export class AgentCreationListComponent implements OnInit, OnDestroy {
     'agt-010': 'Journeys HR',
   };
 
-  private readonly query = computed(() => ({
-    search: this.agentSearchValue().trim(),
-    state: this.stateFilter(),
-  }));
+  private readonly query = computed<AgentListQuery>(() => {
+    this.refreshVersion();
+    return {
+      search: this.agentSearchValue().trim(),
+      state: this.stateFilter(),
+    };
+  });
 
   readonly agents$ = toObservable(this.query).pipe(
     switchMap((query) => this.agentApi.listAgents(query)),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
+
+  readonly pageSize = signal(10);
+  readonly pageSizeOptions = ['10', '20', '30'];
+  readonly currentPage = signal(1);
+  readonly agentList = toSignal(this.agents$, { initialValue: [] as AgentSummary[] });
+  readonly totalAgents = computed(() => this.agentList().length);
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalAgents() / this.pageSize())));
+  readonly pagedAgents = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.agentList().slice(start, start + this.pageSize());
+  });
+  readonly pageNumbers = computed(() => Array.from({ length: this.totalPages() }, (_, index) => index + 1));
+  readonly pageRangeStart = computed(() => (this.totalAgents() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1));
+  readonly pageRangeEnd = computed(() => Math.min(this.currentPage() * this.pageSize(), this.totalAgents()));
+
+  goToPage(page: number): void {
+    this.currentPage.set(Math.min(Math.max(1, page), this.totalPages()));
+  }
+
+  onPageSizeChange(rawValue: string | null): void {
+    const size = Number(rawValue);
+    if (size === 10 || size === 20 || size === 30) {
+      this.pageSize.set(size);
+      this.currentPage.set(1);
+    }
+  }
 
   readonly currentStateLabel = computed(() => {
     const current = this.stateOptions.find((option) => option.value === this.stateFilter());
@@ -137,11 +163,13 @@ export class AgentCreationListComponent implements OnInit, OnDestroy {
 
   onAgentSearchInput(rawValue: string): void {
     this.agentSearchValue.set(rawValue);
+    this.currentPage.set(1);
   }
 
   onStateFilterChange(rawValue: string | null): void {
     if (rawValue === 'all' || rawValue === 'active' || rawValue === 'draft') {
       this.stateFilter.set(rawValue);
+      this.currentPage.set(1);
     }
   }
 
@@ -166,18 +194,23 @@ export class AgentCreationListComponent implements OnInit, OnDestroy {
   getAgentActions(agent: AgentSummary): AgentAction[] {
     const status = this.getAgentStatus(agent);
     if (status === 'Active') {
-      return ['Deactivate', 'View'];
+      return ['Deactivate', 'View', 'Delete'];
     }
     if (status === 'Deactivated') {
-      return ['Activate', 'View'];
+      return ['Activate', 'View', 'Delete'];
     }
-    return ['Activate', 'View'];
+    return ['Activate', 'View', 'Delete'];
   }
 
   onAgentAction(agent: AgentSummary, action: AgentAction, event: MouseEvent): void {
     event.stopPropagation();
     if (action === 'View') {
-      this.openMenuAgentId.set(null);
+      this.openAgent(agent, event);
+      return;
+    }
+
+    if (action === 'Delete') {
+      this.requestDeleteAgent(agent, event);
       return;
     }
 
@@ -185,6 +218,72 @@ export class AgentCreationListComponent implements OnInit, OnDestroy {
     this.statusOverrides.update((current) => ({ ...current, [agent.id]: nextStatus }));
     this.agentApi.updateAgent(agent.id, { status: nextStatus }).subscribe();
     this.openMenuAgentId.set(null);
+  }
+
+  openAgent(agent: AgentSummary, event?: Event): void {
+    event?.stopPropagation();
+    if (event instanceof KeyboardEvent && event.key === ' ') {
+      event.preventDefault();
+    }
+
+    this.openMenuAgentId.set(null);
+    void this.router.navigate(['/agent-creation/template', agent.id], {
+      queryParams: {
+        source: 'existing',
+        name: agent.name,
+      },
+    });
+  }
+
+  requestDeleteAgent(agent: AgentSummary, event?: Event): void {
+    event?.stopPropagation();
+    this.openMenuAgentId.set(null);
+
+    if (this.getAgentStatus(agent) === 'Active') {
+      this.pendingDeleteAgent.set(agent);
+      return;
+    }
+
+    this.deleteAgent(agent);
+  }
+
+  confirmDeleteAgent(): void {
+    const agent = this.pendingDeleteAgent();
+    if (!agent) {
+      return;
+    }
+
+    this.deleteAgent(agent);
+    this.pendingDeleteAgent.set(null);
+  }
+
+  cancelDeleteAgent(): void {
+    this.pendingDeleteAgent.set(null);
+  }
+
+  private deleteAgent(agent: AgentSummary): void {
+    this.agentApi.deleteAgent(agent.id).subscribe();
+    this.statusOverrides.update((current) => {
+      const next = { ...current };
+      delete next[agent.id];
+      return next;
+    });
+
+    if (this.highlightedAgentId() === agent.id) {
+      this.highlightedAgentId.set(null);
+    }
+
+    this.agentTotalCount.set(this.agentApi.getAgentTotalCount());
+    this.refreshVersion.update((version) => version + 1);
+  }
+
+  /** Resolve the deco-icon asset for a card; falls back to a generic agent icon. */
+  getAgentIconSrc(agent: AgentSummary): string {
+    return `assets/icons/agents/${agent.icon ?? 'manager-copilot'}.svg`;
+  }
+
+  getAgentSessions(agent: AgentSummary): number | null {
+    return agent.sessions ?? null;
   }
 
   getAgentProject(agent: AgentSummary): string {
@@ -210,6 +309,11 @@ export class AgentCreationListComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
+    if (this.pendingDeleteAgent()) {
+      this.pendingDeleteAgent.set(null);
+      return;
+    }
+
     this.openMenuAgentId.set(null);
   }
 

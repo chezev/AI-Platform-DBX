@@ -4,6 +4,7 @@ import {
   LucideArrowRight,
   LucideBookOpen,
   LucideBot,
+  LucideBotMessageSquare,
   LucideBrainCircuit,
   LucideBug,
   LucideCheck,
@@ -25,7 +26,6 @@ import {
   LucideMinimize2,
   LucidePaperclip,
   LucideRotateCw,
-  LucideSend,
   LucideShieldCheck,
   LucideSparkles,
   LucideTarget,
@@ -63,6 +63,7 @@ type LucideFallback =
   | 'arrow-right'
   | 'book-open'
   | 'bot'
+  | 'bot-message-square'
   | 'brain-circuit'
   | 'bug'
   | 'check'
@@ -98,6 +99,7 @@ const LUCIDE_FALLBACKS: Record<string, LucideFallback> = {
   'arrow-right': 'arrow-right',
   'book-open': 'book-open',
   bot: 'bot',
+  'bot-message-square': 'bot-message-square',
   'brain-circuit': 'brain-circuit',
   bug: 'bug',
   check: 'check',
@@ -137,6 +139,7 @@ const LUCIDE_FALLBACKS: Record<string, LucideFallback> = {
     LucideArrowRight,
     LucideBookOpen,
     LucideBot,
+    LucideBotMessageSquare,
     LucideBrainCircuit,
     LucideBug,
     LucideCheck,
@@ -158,7 +161,6 @@ const LUCIDE_FALLBACKS: Record<string, LucideFallback> = {
     LucideMinimize2,
     LucidePaperclip,
     LucideRotateCw,
-    LucideSend,
     LucideShieldCheck,
     LucideSparkles,
     LucideTarget,
@@ -188,6 +190,9 @@ const LUCIDE_FALLBACKS: Record<string, LucideFallback> = {
         }
         @case ('bot') {
           <svg lucideBot [size]="size()" [attr.aria-hidden]="decorative() ? 'true' : null"></svg>
+        }
+        @case ('bot-message-square') {
+          <svg lucideBotMessageSquare [size]="size()" [attr.aria-hidden]="decorative() ? 'true' : null"></svg>
         }
         @case ('brain-circuit') {
           <svg lucideBrainCircuit [size]="size()" [attr.aria-hidden]="decorative() ? 'true' : null"></svg>
@@ -238,7 +243,15 @@ const LUCIDE_FALLBACKS: Record<string, LucideFallback> = {
           <svg lucideRotateCw [size]="size()" [attr.aria-hidden]="decorative() ? 'true' : null"></svg>
         }
         @case ('send') {
-          <svg lucideSend [size]="size()" [attr.aria-hidden]="decorative() ? 'true' : null"></svg>
+          <svg
+            [attr.width]="size()"
+            [attr.height]="size()"
+            viewBox="0 0 15 15"
+            fill="currentColor"
+            [attr.aria-hidden]="decorative() ? 'true' : null"
+          >
+            <path d="M13 7.5L2 2L5.5 7.5L2 13L13 7.5Z" />
+          </svg>
         }
         @case ('shield-check') {
           <svg lucideShieldCheck [size]="size()" [attr.aria-hidden]="decorative() ? 'true' : null"></svg>

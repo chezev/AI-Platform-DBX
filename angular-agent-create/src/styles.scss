@@ -203,6 +203,66 @@
   --sds-title-s-bold-line-height: 32px;
 }
 
+/*
+ * Dark mode — PROTOTYPE ONLY.
+ * Not real SDS dark tokens: a shadcn-inspired zinc palette re-mapped onto the
+ * existing SDS variables so the whole app flips with one `.dark` class on <html>.
+ * Toggled from the top-bar moon/sun button. We refine this page-by-page later.
+ */
+.dark {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --sds-bg-primary-active: #000000;      /* product nav */
+  --sds-bg-primary-full: #000000;
+  --sds-bg-primary-hover: #27272a;
+  --sds-bg-primary-disabled: #27272a;
+  --sds-bg-primary-readOnly: #52525b;
+  --sds-bg-neutralWhite-default: #18181b; /* cards / panels / top-bar */
+  --sds-bg-overlay-blanket: rgba(0, 0, 0, 0.7);
+  --sds-bg-neutralGrey-light1: #1f1f23;   /* subtle hover */
+  --sds-bg-neutralGrey-light2: #0c0c0e;   /* page background */
+  --sds-bg-neutralGrey-light3: #141417;
+  --sds-bg-neutralGrey-hover: #27272a;
+  --sds-bg-neutralBlue-default: #1e3a5f;
+  --sds-bg-neutralBlue-light1: #15233a;
+  --sds-bg-neutralBlue-active: #3b82f6;   /* accent */
+
+  /* Feedback (low tints darkened) */
+  --sds-bg-feedback-successLow: #0f2a1d;
+  --sds-bg-feedback-warningLow: #2a2310;
+  --sds-bg-feedback-infoLow: #122436;
+  --sds-bg-feedback-infoMid: #1e3a5f;
+
+  /* Borders */
+  --sds-border-primary-default: #3f3f46;
+  --sds-border-primary-subtle: #27272a;
+  --sds-border-neutralWhite-default: #18181b;
+  --sds-border-neutralGrey-light2: #27272a;
+  --sds-border-neutralGrey-hover: #52525b;
+  --sds-border-neutralBlue-active: #3b82f6;
+
+  /* Text */
+  --sds-text-neutral-title: #fafafa;
+  --sds-text-neutral-label: #d4d4d8;
+  --sds-text-neutral-body: #d4d4d8;
+  --sds-text-neutral-ghost: #a1a1aa;
+  --sds-text-neutral-negative: #ffffff;
+
+  /* Shadows */
+  --sds-shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --sds-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --sds-shadow-dialog: 0 16px 48px rgba(0, 0, 0, 0.7);
+
+  /* Monochrome SDS asset icons (dark glyphs) → light so they read on dark. */
+  --sds-icon-filter: brightness(0) invert(1);
+}
+
+/* Darwinbox wordmark is dark ink — lighten it on the dark top-bar. */
+.dark .sds-app-logo {
+  filter: brightness(0) invert(1);
+}
+
 *,
 *::before,
 *::after {
@@ -559,6 +619,12 @@ textarea {
 
 .sds-search-field input::placeholder {
   color: var(--sds-text-neutral-ghost);
+}
+
+/* House pattern: the magnifier always sits on the LEFT of the input. Markup puts
+   the icon after the input, so flip it with order rather than touching every template. */
+.sds-search-field app-sds-icon {
+  order: -1;
 }
 
 .sds-badge {

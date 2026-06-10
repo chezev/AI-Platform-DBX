@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { SdsIconComponent } from '../icons/sds-icon.component';
 import { SdsIconButtonComponent } from '../spartan/sds-button';
 import { buildTraceDebugResult } from './trace.mock';
@@ -7,6 +7,15 @@ import { TraceTimelineComponent } from './trace-timeline.component';
 import { TraceDebugResult, TraceStep } from './trace.types';
 
 type TracePanelMode = 'trace' | 'copilot';
+
+/** Rotating status lines shown while the debug "thinks". */
+const TRACE_THINKING_STEPS = [
+  'Reading the trace...',
+  'Checking tools and inputs...',
+  'Analyzing token usage...',
+  'Spotting retries and failures...',
+  'Writing the explanation...',
+];
 
 @Component({
   selector: 'app-trace-log-panel',
@@ -47,11 +56,11 @@ type TracePanelMode = 'trace' | 'copilot';
                 <p>
                   I can debug this response trace, explain what happened, and point to the step that needs attention.
                 </p>
-                <p>I can help you with:</p>
-                <div class="copilot-help-line">
-                  <app-sds-icon name="bug" [size]="18"></app-sds-icon>
-                  <span>Finding failed tools, high token usage, missing inputs, and retry paths</span>
-                </div>
+                <p class="copilot-help-heading">
+                  <app-sds-icon name="bug" [size]="16"></app-sds-icon>
+                  I can help you with:
+                </p>
+                <p class="copilot-help-text">Finding failed tools, high token usage, missing inputs, and retry paths</p>
               </div>
 
               <article class="copilot-prompt-card">
@@ -70,23 +79,37 @@ type TracePanelMode = 'trace' | 'copilot';
                   </div>
                   <div>
                     <dt>Total Tokens</dt>
-                    <dd>{{ totalTokens() }}</dd>
+                    <dd>{{ totalTokensDisplay() }}</dd>
                   </div>
                 </dl>
               </section>
 
-              <app-copilot-debug-panel [debugResult]="debugResult" (debugFull)="debugFullTrace()"></app-copilot-debug-panel>
+              @if (debugRequested) {
+                <p class="copilot-user-turn">Debug Full Trace</p>
+              }
+
+              <app-copilot-debug-panel
+                [debugResult]="debugResult"
+                [thinking]="debugThinking"
+                [thinkingText]="debugThinkingText"
+                (debugFull)="debugFullTrace()"
+              ></app-copilot-debug-panel>
             </div>
 
-            <footer class="trace-copilot-input">
+            <footer class="trace-copilot-input" [class.is-typing]="copilotInput.trim().length > 0">
               <label for="trace-copilot-input" class="visually-hidden">Ask Copilot about this trace</label>
-              <input id="trace-copilot-input" type="text" placeholder="Debug this trace..." />
-              <button type="button" class="attachment-button" aria-label="Attach trace context">
-                <app-sds-icon name="paperclip" [size]="16"></app-sds-icon>
-              </button>
-              <button type="button" class="send-button" aria-label="Send Copilot message">
-                <app-sds-icon name="send" [size]="16"></app-sds-icon>
-              </button>
+              <input
+                id="trace-copilot-input"
+                type="text"
+                placeholder="Debug this trace..."
+                [value]="copilotInput"
+                (input)="copilotInput = $any($event.target).value"
+              />
+              @if (copilotInput.trim().length > 0) {
+                <button type="button" class="send-button" aria-label="Send Copilot message">
+                  <app-sds-icon name="send" [size]="16"></app-sds-icon>
+                </button>
+              }
             </footer>
           }
         </aside>
@@ -149,10 +172,27 @@ type TracePanelMode = 'trace' | 'copilot';
       overflow: hidden;
     }
 
+    /* Canvas-studio AI panel styling: soft purple/peach glow + purple gradient
+       border (layered padding-box / border-box backgrounds). */
     .trace-panel.is-copilot {
+      border: 1px solid transparent;
+      border-radius: 16px;
       background:
-        linear-gradient(165deg, var(--sds-ai-glow-subtle) 0%, transparent 28%),
-        var(--sds-bg-neutralWhite-default);
+        linear-gradient(165.61deg, #ece3fa -3.95%, rgba(254, 255, 255, 0) 21.32%) padding-box,
+        linear-gradient(217.61deg, #fcf4eb 2.05%, rgba(255, 255, 255, 0) 16.32%) padding-box,
+        linear-gradient(0deg, #ffffff, #ffffff) padding-box,
+        linear-gradient(160deg, rgba(181, 139, 246, 0.9) 4%, rgba(181, 139, 246, 0.3) 54%, rgba(181, 139, 246, 0.7) 79%) border-box;
+      box-shadow:
+        0 0 7px rgba(0, 0, 0, 0.1),
+        inset 0 2px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    :host-context(.dark) .trace-panel.is-copilot {
+      background:
+        linear-gradient(165.61deg, rgba(124, 82, 223, 0.22) -3.95%, rgba(24, 24, 27, 0) 26%) padding-box,
+        linear-gradient(0deg, #18181b, #18181b) padding-box,
+        linear-gradient(160deg, rgba(181, 139, 246, 0.7) 4%, rgba(181, 139, 246, 0.25) 54%, rgba(181, 139, 246, 0.6) 79%) border-box;
+      box-shadow: 0 0 7px rgba(0, 0, 0, 0.45);
     }
 
     .trace-header {
@@ -201,6 +241,9 @@ type TracePanelMode = 'trace' | 'copilot';
       flex: 1 1 auto;
       overflow: auto;
       scrollbar-width: none;
+      /* Fade content into the header + input edges (canvas-studio AI panel style). */
+      mask-image: linear-gradient(to bottom, transparent 0, #000 32px, #000 calc(100% - 40px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 32px, #000 calc(100% - 40px), transparent 100%);
     }
 
     .trace-scroll {
@@ -238,11 +281,11 @@ type TracePanelMode = 'trace' | 'copilot';
     .copilot-intro {
       display: flex;
       flex-direction: column;
-      gap: var(--sds-gap-24);
+      gap: var(--sds-gap-12);
     }
 
     .copilot-intro p,
-    .copilot-help-line span,
+    .copilot-help-text,
     .copilot-prompt-card {
       margin: 0;
       color: var(--sds-text-neutral-label);
@@ -251,19 +294,42 @@ type TracePanelMode = 'trace' | 'copilot';
       line-height: var(--sds-body-m-book-line-height);
     }
 
-    .copilot-help-line {
-      padding-left: var(--sds-padding-16);
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
+    /* Bug icon now sits inline with the heading; the list text is left-aligned. */
+    .copilot-help-heading {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
       gap: var(--sds-gap-8);
-      align-items: start;
+      color: var(--sds-text-neutral-title);
+      font-size: var(--sds-body-m-book-font-size);
+      font-weight: var(--sds-body-m-medium-font-weight);
+      line-height: var(--sds-body-m-book-line-height);
     }
 
+    /* User message: right-aligned + narrower so it reads distinctly from the
+       left-aligned copilot text. */
     .copilot-prompt-card {
-      margin-inline: var(--sds-padding-16);
-      padding: var(--sds-padding-16);
+      align-self: flex-end;
+      max-width: 80%;
+      margin-left: 30px;
+      padding: var(--sds-padding-12) var(--sds-padding-16);
       border-radius: var(--sds-border-radius-8);
       background: var(--sds-ai-glow-subtle);
+      text-align: left;
+    }
+
+    /* The "Debug Full Trace" click as its own user turn ABOVE the Copilot answer. */
+    .copilot-user-turn {
+      align-self: flex-end;
+      max-width: 80%;
+      margin: 0;
+      padding: var(--sds-padding-8) var(--sds-padding-12);
+      border-radius: var(--sds-border-radius-8);
+      background: var(--sds-ai-glow-subtle);
+      color: var(--sds-text-neutral-label);
+      font-size: var(--sds-body-m-book-font-size);
+      font-weight: var(--sds-body-m-book-font-weight);
+      line-height: var(--sds-body-m-book-line-height);
     }
 
     .copilot-context {
@@ -305,17 +371,25 @@ type TracePanelMode = 'trace' | 'copilot';
       white-space: nowrap;
     }
 
+    /* Standard small input (matches the app's existing inputs), not a tall pill. */
     .trace-copilot-input {
       flex: none;
-      min-height: var(--sds-size-56);
+      min-height: var(--sds-size-40);
       margin: 0 var(--sds-padding-20) var(--sds-padding-16);
-      padding: var(--sds-padding-4) var(--sds-padding-4) var(--sds-padding-4) var(--sds-padding-12);
+      padding: var(--sds-padding-4) var(--sds-padding-8) var(--sds-padding-4) var(--sds-padding-12);
       border: 1px solid var(--sds-border-primary-default);
-      border-radius: var(--sds-border-radius-24);
-      background: var(--sds-bg-neutralGrey-light1);
+      border-radius: var(--sds-border-radius-8);
+      background: var(--sds-bg-neutralWhite-default);
       display: flex;
       align-items: center;
       gap: var(--sds-gap-8);
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    /* Purple focus ring (was blue in the reference design). */
+    .trace-copilot-input:focus-within {
+      border-color: var(--sds-ai-border-active);
+      box-shadow: 0 0 0 1px var(--sds-ai-border-active);
     }
 
     .trace-copilot-input input {
@@ -333,26 +407,18 @@ type TracePanelMode = 'trace' | 'copilot';
       outline: none;
     }
 
-    .attachment-button,
+    /* Bare dark-grey SDS send icon (no circle), only present while typing. */
     .send-button {
-      min-width: var(--sds-size-36);
-      height: var(--sds-size-36);
+      min-width: var(--sds-size-28);
+      height: var(--sds-size-28);
+      padding: 0;
       border: none;
-      border-radius: var(--sds-border-radius-full);
       background: transparent;
-      color: var(--sds-text-neutral-label);
+      color: #5a5a5a;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-    }
-
-    .send-button {
-      background: var(--sds-bg-primary-active);
-      color: var(--sds-text-neutral-negative);
-    }
-
-    .send-button app-sds-icon {
-      --sds-icon-filter: brightness(0) saturate(100%) invert(100%);
+      cursor: pointer;
     }
 
     .trace-mode-switcher {
@@ -431,22 +497,37 @@ export class TraceLogPanelComponent implements OnChanges {
   @Output() readonly closePanel = new EventEmitter<void>();
   @Output() readonly expandedChange = new EventEmitter<boolean>();
 
+  private readonly cdr = inject(ChangeDetectorRef);
+
   expandedIds = new Set<string>();
   debugResult: TraceDebugResult | null = null;
+  debugThinking = false;
+  debugRequested = false;
+  debugThinkingText = TRACE_THINKING_STEPS[0];
+  debugConsumedTokens = 0;
+  copilotInput = '';
   panelMode: TracePanelMode = 'trace';
   wide = false;
+  private debugTimer?: ReturnType<typeof setTimeout>;
+  private thinkingTimer?: ReturnType<typeof setTimeout>;
+  private blinkTimer?: ReturnType<typeof setTimeout>;
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['steps'] || changes['responseId'] || changes['open']) {
+    // A fresh open (or close) fully resets, including collapsing to non-wide.
+    if (changes['open']) {
       this.resetPanelState();
+      return;
+    }
+    // Navigating between traces while the panel stays open only refreshes the
+    // content — the expanded (wide) state is preserved until the user collapses.
+    if (changes['steps'] || changes['responseId']) {
+      this.refreshTraceContent();
     }
   }
 
   setPanelMode(mode: TracePanelMode): void {
+    // Opening AI Assist no longer auto-debugs — the user starts it from the button.
     this.panelMode = mode;
-    if (mode === 'copilot' && !this.debugResult) {
-      this.debugFullTrace();
-    }
   }
 
   toggleWide(): void {
@@ -465,13 +546,93 @@ export class TraceLogPanelComponent implements OnChanges {
   }
 
   debugTraceStep(step: TraceStep): void {
+    this.debugThinking = false;
+    this.debugRequested = false;
+    clearTimeout(this.debugTimer);
+    clearTimeout(this.thinkingTimer);
+    clearTimeout(this.blinkTimer);
     this.debugResult = buildTraceDebugResult(this.steps, step);
+    this.debugConsumedTokens = 720 + (step.totalTokens ?? 0);
     this.expandedIds = new Set([...this.expandedIds, step.id]);
     this.panelMode = 'copilot';
   }
 
   debugFullTrace(): void {
-    this.debugResult = buildTraceDebugResult(this.steps);
+    // The click is the user's turn ("Debug Full Trace", rendered above); the answer
+    // is a terminal-style typewriter phase then the detailed result. Tokens are
+    // consumed by the request (input prompt + output answer).
+    clearTimeout(this.debugTimer);
+    clearTimeout(this.thinkingTimer);
+    clearTimeout(this.blinkTimer);
+    this.debugRequested = true;
+    this.debugThinking = true;
+    this.debugResult = null;
+    this.runThinkingTypewriter();
+
+    this.debugTimer = setTimeout(() => {
+      clearTimeout(this.thinkingTimer);
+    clearTimeout(this.blinkTimer);
+      this.debugThinking = false;
+      this.debugResult = buildTraceDebugResult(this.steps);
+      this.debugConsumedTokens = 900 + this.steps.length * 180 + 420;
+      this.cdr.markForCheck();
+    }, 5500);
+  }
+
+  /**
+   * Terminal typewriter: a single one-cell caret at the frontier blinks ON/OFF
+   * between block `█` and underscore `_` (never both at once). Letters fill in as
+   * it advances; the first line types out, then each next line is written IN PLACE
+   * over the previous one.
+   */
+  private runThinkingTypewriter(): void {
+    const steps = TRACE_THINKING_STEPS;
+    const TYPE_MS = 75;
+    const BLINK_MS = 340;
+    const HOLD_MS = 520;
+
+    let msgIdx = 0;
+    let oldText = '';
+    let target = steps[0];
+    let i = 0;
+    let cursorOn = true;
+
+    const render = () => {
+      const caret = cursorOn ? '█' : '_';
+      this.debugThinkingText =
+        i >= target.length ? target + caret : target.slice(0, i) + caret + oldText.slice(i + 1);
+      this.cdr.markForCheck();
+    };
+
+    const blink = () => {
+      cursorOn = !cursorOn;
+      render();
+      this.blinkTimer = setTimeout(blink, BLINK_MS);
+    };
+
+    const type = () => {
+      if (i > target.length) {
+        this.thinkingTimer = setTimeout(() => {
+          oldText = target;
+          msgIdx = (msgIdx + 1) % steps.length;
+          target = steps[msgIdx];
+          i = 0;
+          type();
+        }, HOLD_MS);
+        return;
+      }
+      render();
+      i += 1;
+      this.thinkingTimer = setTimeout(type, TYPE_MS);
+    };
+
+    render();
+    this.thinkingTimer = setTimeout(type, TYPE_MS);
+    this.blinkTimer = setTimeout(blink, BLINK_MS);
+  }
+
+  totalTokensDisplay(): number {
+    return this.totalTokens() + this.debugConsumedTokens;
   }
 
   copyRawLog(step: TraceStep): void {
@@ -490,7 +651,7 @@ export class TraceLogPanelComponent implements OnChanges {
     return this.steps.reduce((total, step) => total + (step.totalTokens ?? 0), 0);
   }
 
-  private resetPanelState(): void {
+  private refreshTraceContent(): void {
     if (!this.open) return;
 
     const expanded = this.steps
@@ -499,7 +660,19 @@ export class TraceLogPanelComponent implements OnChanges {
 
     this.expandedIds = new Set(expanded);
     this.debugResult = null;
+    this.debugThinking = false;
+    this.debugRequested = false;
+    this.debugConsumedTokens = 0;
+    clearTimeout(this.debugTimer);
+    clearTimeout(this.thinkingTimer);
+    clearTimeout(this.blinkTimer);
     this.panelMode = 'trace';
+  }
+
+  private resetPanelState(): void {
+    if (!this.open) return;
+
+    this.refreshTraceContent();
     this.wide = false;
     this.expandedChange.emit(false);
   }

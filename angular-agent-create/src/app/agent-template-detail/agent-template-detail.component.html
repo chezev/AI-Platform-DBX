@@ -1,16 +1,27 @@
 <div class="template-detail-shell">
   <app-sds-topbar searchId="template-detail-global-search"></app-sds-topbar>
 
-  <nav class="detail-subheader" aria-label="Template breadcrumb">
-    <a routerLink="/agent-creation/startup">Create Agent</a>
-    <span>/</span>
-    <strong>Template</strong>
+  <nav class="detail-subheader" aria-label="Breadcrumb">
+    @if (isExistingAgent) {
+      <a routerLink="/agent-creation">Agent Hub</a>
+      <span>/</span>
+      <strong>{{ displayName }}</strong>
+    } @else {
+      <a routerLink="/agent-creation/startup">Create Agent</a>
+      <span>/</span>
+      <strong>Template</strong>
+    }
   </nav>
 
   <main class="detail-workspace">
-    <section class="summary-card" sdsCard aria-label="Template summary">
+    <section class="summary-card" sdsCard aria-label="Agent summary">
       <div class="summary-content">
-        <h1>{{ displayName }}</h1>
+        <h1>
+          {{ displayName }}
+          @if (isExistingAgent) {
+            <span class="version-badge">V12</span>
+          }
+        </h1>
         <div class="summary-meta">
           <span>
             <app-sds-icon name="gear" [size]="12"></app-sds-icon>
@@ -28,17 +39,32 @@
         </div>
       </div>
 
-      <a sdsButton variant="primary" size="sm" routerLink="/agent-creation/create" [queryParams]="ctaQueryParams">
-        {{ ctaLabel }}
-      </a>
+      @if (isExistingAgent) {
+        <div class="summary-actions">
+          <label class="active-toggle">
+            <span>Active</span>
+            <input type="checkbox" [checked]="agentActive()" (change)="agentActive.set(!agentActive())" aria-label="Toggle agent active" />
+            <span class="active-toggle-track" aria-hidden="true"></span>
+          </label>
+          <a sdsButton variant="secondary" size="default" routerLink="/agent-creation/test" [queryParams]="{ name: displayName }">Test</a>
+          <a sdsButton variant="primary" size="default" routerLink="/agent-creation/create" [queryParams]="ctaQueryParams">Edit</a>
+        </div>
+      } @else {
+        <a sdsButton variant="primary" size="default" routerLink="/agent-creation/create" [queryParams]="ctaQueryParams">
+          {{ ctaLabel }}
+        </a>
+      }
     </section>
 
-    <nav class="detail-tabs" aria-label="Template sections">
-      <button type="button" class="detail-tab is-active">Details</button>
-      <button type="button" class="detail-tab">Logs</button>
-      <button type="button" class="detail-tab">Versions</button>
-    </nav>
+    @if (isExistingAgent) {
+      <nav class="detail-tabs" aria-label="Agent sections">
+        <button type="button" class="detail-tab" [class.is-active]="activeTab() === 'details'" (click)="setTab('details')">Details</button>
+        <button type="button" class="detail-tab" [class.is-active]="activeTab() === 'logs'" (click)="setTab('logs')">Logs</button>
+        <button type="button" class="detail-tab" [class.is-active]="activeTab() === 'versions'" (click)="setTab('versions')">Versions</button>
+      </nav>
+    }
 
+    @if (!isExistingAgent || activeTab() === 'details') {
     <section class="detail-card overview-card" sdsCard aria-label="Overview">
       <h2>Overview</h2>
 
@@ -125,7 +151,7 @@
         <h2>Built-in Capabilities</h2>
         <div class="capability-grid">
           @for (capability of capabilities; track capability.label) {
-            <div class="field">
+            <div class="field capability-card">
               <span>{{ capability.label }}</span>
               <strong>{{ capability.value }}</strong>
             </div>
@@ -146,5 +172,188 @@
         </article>
       </div>
     </section>
+    }
+
+    @if (isExistingAgent && activeTab() === 'logs') {
+      <section class="detail-card table-card" sdsCard aria-label="Run logs">
+        <header class="table-toolbar">
+          <h2 class="table-title">Logs ({{ logsTotal }})</h2>
+          <div class="table-controls">
+            <div class="control-select" sdsSelect [value]="logStatusFilter()" (valueChange)="onLogFilterChange($event)">
+              <sds-select-trigger>
+                <span>{{ logStatusFilter() }}</span>
+              </sds-select-trigger>
+              <sds-select-content *sdsSelectPortal>
+                @for (status of logStatusFilters; track status) {
+                  <sds-select-item [value]="status">{{ status }}</sds-select-item>
+                }
+              </sds-select-content>
+            </div>
+            <label sdsSearchField class="control-search">
+              <input type="search" [ngModel]="logSearch()" (ngModelChange)="logSearch.set($event)" placeholder="Search" aria-label="Search logs" />
+              <app-sds-icon name="search" [size]="16"></app-sds-icon>
+            </label>
+          </div>
+        </header>
+
+        <div class="data-table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Run ID</th>
+                <th>Session ID</th>
+                <th>Input</th>
+                <th>When</th>
+                <th>Status</th>
+                <th>Tokens</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (log of logs; track log.runId) {
+                <tr>
+                  <td><button type="button" class="cell-link" (click)="openRun(log)">{{ log.runId | slice: 0:10 }}…</button></td>
+                  <td><button type="button" class="cell-chip-link" (click)="openSession(log)">{{ log.sessionId | slice: 0:10 }}…</button></td>
+                  <td class="cell-input">{{ log.input }}</td>
+                  <td class="cell-muted">{{ log.when }}</td>
+                  <td><span class="status-pill" [attr.data-status]="log.status">{{ log.status }}</span></td>
+                  <td>{{ log.tokens }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="table-footer">
+          <span class="footer-summary">1–10 of 103 records</span>
+          <nav class="footer-pages" aria-label="Logs pagination">
+            <button type="button" class="page-link page-arrow" aria-label="Previous page" disabled>
+              <app-sds-icon name="arrow-left" [size]="16"></app-sds-icon>
+            </button>
+            <button type="button" class="page-link is-active">1</button>
+            <button type="button" class="page-link">2</button>
+            <button type="button" class="page-link">3</button>
+            <button type="button" class="page-link">4</button>
+            <button type="button" class="page-link">5</button>
+            <span class="page-gap">…</span>
+            <button type="button" class="page-link">14</button>
+            <button type="button" class="page-link page-arrow" aria-label="Next page">
+              <app-sds-icon name="arrow-right" [size]="16"></app-sds-icon>
+            </button>
+          </nav>
+          <div class="perpage-select" sdsSelect [value]="logsPageSize().toString()" (valueChange)="onPageSizeChange(logsPageSize, $event)">
+            <sds-select-trigger>
+              <span class="select-display-label">{{ logsPageSize() }} per page</span>
+            </sds-select-trigger>
+            <sds-select-content *sdsSelectPortal>
+              @for (size of perPageOptions; track size) {
+                <sds-select-item [value]="size" [disabled]="+size > logsTotal">{{ size }} per page</sds-select-item>
+              }
+            </sds-select-content>
+          </div>
+        </footer>
+      </section>
+    }
+
+    @if (isExistingAgent && activeTab() === 'versions') {
+      <section class="detail-card table-card" sdsCard aria-label="Versions">
+        <header class="table-toolbar">
+          <h2 class="table-title">Versions ({{ versionsTotal }})</h2>
+          <div class="table-controls">
+            <div class="control-select" sdsSelect [value]="versionFilter()" (valueChange)="onVersionFilterChange($event)">
+              <sds-select-trigger>
+                <span>{{ versionFilter() }}</span>
+              </sds-select-trigger>
+              <sds-select-content *sdsSelectPortal>
+                @for (option of versionFilterOptions; track option) {
+                  <sds-select-item [value]="option">{{ option }}</sds-select-item>
+                }
+              </sds-select-content>
+            </div>
+            <label sdsSearchField class="control-search">
+              <input type="search" [ngModel]="versionSearch()" (ngModelChange)="versionSearch.set($event)" placeholder="Search" aria-label="Search versions" />
+              <app-sds-icon name="search" [size]="16"></app-sds-icon>
+            </label>
+          </div>
+        </header>
+
+        <div class="data-table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Provider</th>
+                <th>Model</th>
+                <th>When</th>
+                <th class="actions-head">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (version of versions; track $index) {
+                <tr>
+                  <td>
+                    <span class="version-cell">
+                      <button type="button" class="cell-link" (click)="viewVersion(version, $event)">{{ version.version }}</button>
+                      @if (version.isCurrent) {
+                        <span class="current-badge">Current</span>
+                      }
+                    </span>
+                  </td>
+                  <td>{{ version.provider }}</td>
+                  <td>{{ version.model }}</td>
+                  <td class="cell-muted">{{ version.when }}</td>
+                  <td class="actions-cell">
+                    <div class="row-menu-anchor">
+                      <button
+                        type="button"
+                        class="card-menu-button"
+                        sdsIconButton
+                        variant="ghost"
+                        size="xs"
+                        aria-label="Version actions"
+                        [attr.aria-expanded]="isVersionMenuOpen(version.version)"
+                        (click)="toggleVersionMenu(version.version, $event)"
+                      >
+                        <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                      </button>
+
+                      @if (isVersionMenuOpen(version.version)) {
+                        <div class="card-action-menu row-action-menu" role="menu" aria-label="Version actions">
+                          <button type="button" class="card-action-item" role="menuitem" (click)="viewVersion(version, $event)">View</button>
+                          <button type="button" class="card-action-item" role="menuitem" (click)="restoreVersion(version, $event)">Restore</button>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="table-footer">
+          <span class="footer-summary">1–10 of {{ versionsTotal }} records</span>
+          <nav class="footer-pages" aria-label="Versions pagination">
+            <button type="button" class="page-link page-arrow" aria-label="Previous page" disabled>
+              <app-sds-icon name="arrow-left" [size]="16"></app-sds-icon>
+            </button>
+            <button type="button" class="page-link is-active">1</button>
+            <button type="button" class="page-link">2</button>
+            <button type="button" class="page-link page-arrow" aria-label="Next page">
+              <app-sds-icon name="arrow-right" [size]="16"></app-sds-icon>
+            </button>
+          </nav>
+          <div class="perpage-select" sdsSelect [value]="versionsPageSize().toString()" (valueChange)="onPageSizeChange(versionsPageSize, $event)">
+            <sds-select-trigger>
+              <span class="select-display-label">{{ versionsPageSize() }} per page</span>
+            </sds-select-trigger>
+            <sds-select-content *sdsSelectPortal>
+              @for (size of perPageOptions; track size) {
+                <sds-select-item [value]="size" [disabled]="+size > versionsTotal">{{ size }} per page</sds-select-item>
+              }
+            </sds-select-content>
+          </div>
+        </footer>
+      </section>
+    }
   </main>
 </div>

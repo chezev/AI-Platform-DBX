@@ -244,6 +244,8 @@ export class AgentApiService {
   private readonly mockAgents: AgentSummary[] = [
     {
       id: 'agt-001',
+      icon: 'product-adoption',
+      sessions: 115,
       name: 'Product Adoption Agent',
       description: 'This agent looks at the Darwinbox client adoption metrics data and gives out recommendations.',
       category: 'Integration Au...',
@@ -253,6 +255,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-002',
+      icon: 'payroll-compliance',
+      sessions: 25,
       name: 'Payroll Compliance Agent',
       description: 'Monitors payroll data to ensure compliance with local labor laws and tax regulations, flagging risks.',
       category: 'HR Payroll',
@@ -262,6 +266,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-003',
+      icon: 'employee-engagement',
+      sessions: 102,
       name: 'Employee Engagement Agent',
       description: 'Analyzes employee survey feedback to provide actionable insights on engagement levels and culture.',
       category: 'Communicat...',
@@ -271,6 +277,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-004',
+      icon: 'talent-acquisition',
+      sessions: 524,
       name: 'Talent Acquisition Agent',
       description: 'Evaluates hiring pipeline metrics and recommends strategies to reduce time-to-fill and improve quality.',
       category: 'Talent',
@@ -280,6 +288,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-005',
+      icon: 'learning-development',
+      sessions: 340,
       name: 'Learning and Development Agent',
       description: 'Tracks employee training progress and suggests personalized learning paths based on skill gaps.',
       category: 'Skills Develop...',
@@ -289,6 +299,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-006',
+      icon: 'attendance-management',
+      sessions: 16,
       name: 'Attendance Management Agent',
       description: 'Analyzes attendance patterns to identify anomalies and recommend policy adjustments.',
       category: 'HR Policies',
@@ -298,6 +310,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-007',
+      icon: 'performance-review',
+      sessions: 25,
       name: 'Performance Review Agent',
       description: 'Automates collection and analysis of performance feedback for continuous development planning.',
       category: 'Performance...',
@@ -307,6 +321,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-008',
+      icon: 'benefits-optimization',
+      sessions: 88,
       name: 'Benefits Optimization Agent',
       description: 'Benchmarks benefits usage trends and recommends policy improvements for utilization and retention.',
       category: 'Benefits',
@@ -316,6 +332,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-009',
+      icon: 'policy-compliance',
+      sessions: 54,
       name: 'Policy Compliance Agent',
       description: 'Scans policy exceptions and alerts owners when approvals or acknowledgments are overdue.',
       category: 'HR Policies',
@@ -325,6 +343,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-010',
+      icon: 'workforce-planning',
+      sessions: 210,
       name: 'Workforce Planning Agent',
       description: 'Forecasts demand and supply trends to support quarterly headcount and hiring decisions.',
       category: 'Workforce',
@@ -334,6 +354,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-011',
+      icon: 'attrition-risk',
+      sessions: 12,
       name: 'Attrition Risk Agent',
       description: 'Identifies attrition signals from engagement and manager patterns and prioritizes interventions.',
       category: 'Retention',
@@ -343,6 +365,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-012',
+      icon: 'candidate-screening',
+      sessions: 436,
       name: 'Candidate Screening Agent',
       description: 'Scores applicant fit using skills and experience signals to speed up recruiter shortlisting.',
       category: 'Talent',
@@ -352,6 +376,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-013',
+      icon: 'goal-alignment',
+      sessions: 73,
       name: 'Goal Alignment Agent',
       description: 'Maps goals across teams and highlights dependency conflicts before performance cycles.',
       category: 'Goals',
@@ -361,6 +387,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-014',
+      icon: 'internal-mobility',
+      sessions: 9,
       name: 'Internal Mobility Agent',
       description: 'Surfaces role opportunities based on skills, aspirations, and manager recommendations.',
       category: 'Mobility',
@@ -370,6 +398,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-015',
+      icon: 'onboarding-coach',
+      sessions: 151,
       name: 'Onboarding Coach Agent',
       description: 'Guides new hires through milestones, nudges managers, and tracks completion confidence.',
       category: 'Onboarding',
@@ -379,6 +409,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-016',
+      icon: 'expense-audit',
+      sessions: 64,
       name: 'Expense Audit Agent',
       description: 'Flags claim anomalies by policy, amount patterns, and missing supporting documents.',
       category: 'Finance',
@@ -388,6 +420,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-017',
+      icon: 'shift-forecasting',
+      sessions: 21,
       name: 'Shift Forecasting Agent',
       description: 'Predicts workforce coverage gaps and proposes optimized schedules for demand-heavy periods.',
       category: 'Scheduling',
@@ -397,6 +431,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-018',
+      icon: 'knowledge-retrieval',
+      sessions: 298,
       name: 'Knowledge Retrieval Agent',
       description: 'Indexes playbooks and SOPs to answer policy and process questions for frontline teams.',
       category: 'Knowledge',
@@ -406,6 +442,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-019',
+      icon: 'manager-copilot',
+      sessions: 412,
       name: 'Manager Copilot Agent',
       description: 'Prepares manager briefings with team trends, talking points, and coaching opportunities.',
       category: 'Leadership',
@@ -415,6 +453,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-020',
+      icon: 'sentiment-watch',
+      sessions: 18,
       name: 'Sentiment Watch Agent',
       description: 'Monitors pulse feedback and flags sentiment shifts by department and engagement driver.',
       category: 'Engagement',
@@ -424,6 +464,8 @@ export class AgentApiService {
     },
     {
       id: 'agt-021',
+      icon: 'compliance-narrator',
+      sessions: 140,
       name: 'Compliance Narrator Agent',
       description: 'Summarizes regulatory changes and converts updates into task-ready guidance for teams.',
       category: 'Compliance',

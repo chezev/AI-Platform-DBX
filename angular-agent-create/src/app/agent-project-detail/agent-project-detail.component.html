@@ -1,0 +1,155 @@
+<div class="page-shell">
+  @if (project(); as project) {
+    <header class="detail-header">
+      <nav class="detail-breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/agent-hub/projects">Projects</a>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-current">
+          <span class="project-folder" [style.color]="folderColor(project.colorId)">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h3.382a2 2 0 0 1 1.414.586L11.83 6H18.5A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z" />
+            </svg>
+          </span>
+          <strong aria-current="page">{{ project.name }}</strong>
+        </span>
+      </nav>
+      @if (project.description) {
+        <p class="detail-desc">{{ project.description }}</p>
+      }
+    </header>
+
+    <section class="tab-panel">
+      <div class="panel-toolbar">
+        <label class="panel-search" sdsSearchField for="resource-search-input">
+          <input
+            id="resource-search-input"
+            type="search"
+            placeholder="Search resources by name"
+            [value]="searchValue()"
+            (input)="onSearchInput($any($event.target).value)"
+          />
+          <app-sds-icon name="search" [size]="16"></app-sds-icon>
+        </label>
+
+        <div class="type-filter-select" sdsSelect [value]="typeFilter()" (valueChange)="setFilter($event)">
+          <sds-select-trigger>
+            <span class="select-display-label">{{ currentTypeLabel() }}</span>
+          </sds-select-trigger>
+          <sds-select-content *sdsSelectPortal>
+            @for (filter of filters; track filter) {
+              <sds-select-item [value]="filter">{{ filter }}</sds-select-item>
+            }
+          </sds-select-content>
+        </div>
+      </div>
+
+      <div class="resource-table-wrap">
+        <table class="resource-table" aria-label="Project resources">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Created On</th>
+              <th>Updated On</th>
+              <th>Owner</th>
+              <th class="actions-head" aria-label="Actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (resource of resources(); track trackResource($index, resource)) {
+              <tr
+                class="resource-row"
+                [class.is-menu-open]="isMenuOpen(resource.id)"
+                role="button"
+                tabindex="0"
+                (click)="openResource(resource, $event)"
+                (keydown.enter)="openResource(resource, $event)"
+                (keydown.space)="openResource(resource, $event)"
+              >
+                <td class="name-cell">{{ resource.name }}</td>
+                <td>
+                  <span class="type-badge" [attr.data-type]="resource.type">{{ resource.type }}</span>
+                </td>
+                <td class="muted-cell">{{ resource.createdOn }}</td>
+                <td class="muted-cell">{{ resource.updatedOn }}</td>
+                <td>
+                  <span class="person">
+                    <span class="person-name">{{ resource.ownerName }}</span>
+                    <span class="person-id">{{ resource.ownerEmpId }}</span>
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <div class="row-menu-anchor">
+                    <button
+                      type="button"
+                      class="row-menu-button"
+                      sdsIconButton
+                      variant="ghost"
+                      size="xs"
+                      aria-label="More actions"
+                      [attr.aria-expanded]="isMenuOpen(resource.id)"
+                      (click)="toggleMenu(resource.id, $event)"
+                    >
+                      <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                    </button>
+
+                    @if (isMenuOpen(resource.id)) {
+                      <div
+                        class="row-action-menu"
+                        role="menu"
+                        aria-label="Resource actions"
+                        [style.top.px]="menuPos()?.top"
+                        [style.right.px]="menuPos()?.right"
+                        (click)="$event.stopPropagation()"
+                      >
+                        <button type="button" class="row-action-item" role="menuitem" (click)="onAction('edit', resource, $event)">Edit</button>
+                        <button type="button" class="row-action-item" role="menuitem" (click)="onAction('view', resource, $event)">View</button>
+                        <button type="button" class="row-action-item is-danger" role="menuitem" (click)="onAction('delete', resource, $event)">Delete</button>
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr class="empty-row">
+                <td colspan="6">No resources in this project yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  } @else {
+    <section class="not-found">
+      <h1>Project not found</h1>
+      <p>This project may have been deleted.</p>
+      <a sdsButton variant="primary" routerLink="/agent-hub/projects">Back to Projects</a>
+    </section>
+  }
+
+  @if (pendingDeleteResource(); as resource) {
+    <div class="modal-backdrop" role="presentation" (click)="cancelDelete()">
+      <section
+        class="modal-card delete-card"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-resource-title"
+        (click)="$event.stopPropagation()"
+      >
+        <button type="button" class="modal-close" aria-label="Close" (click)="cancelDelete()">
+          <app-sds-icon name="x" [size]="18"></app-sds-icon>
+        </button>
+
+        <header class="modal-head">
+          <h2 id="delete-resource-title">Delete “{{ resource.name }}”?</h2>
+          <p>This {{ resource.type.toLowerCase() }} will be removed from {{ project()?.name }}. This can’t be undone.</p>
+        </header>
+
+        <div class="modal-actions">
+          <button type="button" sdsButton variant="secondary" (click)="cancelDelete()">Cancel</button>
+          <button type="button" sdsButton variant="primary" class="danger-confirm" (click)="confirmDelete()">Delete</button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

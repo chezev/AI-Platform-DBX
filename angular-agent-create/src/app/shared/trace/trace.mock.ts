@@ -649,11 +649,17 @@ export function getTraceCase(caseId: string): TraceCase {
   return TRACE_CASES.find((traceCase) => traceCase.id === caseId) ?? TRACE_CASES[0];
 }
 
-export function cloneTraceStepsForResponse(caseId: string, responseId: string): TraceStep[] {
+export function cloneTraceStepsForResponse(
+  caseId: string,
+  responseId: string,
+  finalOutput?: string,
+): TraceStep[] {
   return getTraceCase(caseId).steps.map((step) => ({
     ...step,
     id: `${responseId}-${step.sequence}`,
     responseId,
+    // Keep the trace's Final Response in sync with the message shown in chat.
+    output: step.type === 'final_response' && finalOutput !== undefined ? finalOutput : step.output,
   }));
 }
 

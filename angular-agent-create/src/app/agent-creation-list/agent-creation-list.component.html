@@ -1,222 +1,262 @@
+<!-- Agents leaf content. Topbar + product nav + section sub-tabs + Create Agent
+     CTA are provided by the shared AppShell that wraps this route. -->
 <div class="page-shell">
-  <app-sds-topbar
-    searchId="global-search-input"
-    [searchValue]="globalSearchValue()"
-    (searchValueChange)="onGlobalSearchInput($event)"
-  ></app-sds-topbar>
+  <section class="tab-panel">
+    <div class="controls-row">
+      <label class="page-search" sdsSearchField for="agent-search-input">
+        <app-sds-icon name="search" [size]="16"></app-sds-icon>
+        <input
+          id="agent-search-input"
+          type="search"
+          placeholder="Search here"
+          [value]="agentSearchValue()"
+          (input)="onAgentSearchInput($any($event.target).value)"
+        />
+      </label>
 
-  <nav class="product-nav" aria-label="Product navigation">
-    <button type="button" class="product-nav-leading" aria-label="Agent hub">
-      <app-sds-icon name="agent-hub" [size]="20"></app-sds-icon>
-    </button>
+      <div class="controls-right">
+        <div class="state-filter" sdsSelect [value]="stateFilter()" (valueChange)="onStateFilterChange($event)">
+          <sds-select-trigger>
+            <span class="select-display-label">{{ currentStateLabel() }}</span>
+          </sds-select-trigger>
 
-    <button
-      *ngFor="let menu of productMenus; let menuIndex = index"
-      type="button"
-      class="product-nav-item"
-      [class.is-active]="menuIndex === 0"
-    >
-      {{ menu }}
-    </button>
-  </nav>
+          <sds-select-content *sdsSelectPortal>
+            @for (option of stateOptions; track trackOption($index, option)) {
+              <sds-select-item [value]="option.value">{{ option.label }}</sds-select-item>
+            }
+          </sds-select-content>
+        </div>
 
-  <main
-    class="workspace"
-    brnTabs
-    [brnTabs]="activeModuleTab()"
-    (tabActivated)="onTabChange($event)"
-    aria-label="Agent list workspace"
-  >
-    <div class="workspace-heading">
-      <div class="module-tabs" brnTabsList aria-label="Agent modules">
-        <button brnTabsTrigger="agents" class="module-tab-button">
-          <app-sds-icon name="user-cog" [size]="14"></app-sds-icon>
-          Agents <span class="count-pill">{{ agentTotalCount }}</span>
-        </button>
-        <button brnTabsTrigger="projects" class="module-tab-button">
-          <app-sds-icon name="home" [size]="14"></app-sds-icon>
-          Projects <span class="count-pill muted">99+</span>
-        </button>
+        <div class="view-toggle" aria-label="View mode">
+          <button
+            type="button"
+            class="view-mode-btn"
+            [class.is-active]="viewMode() === 'grid'"
+            (click)="setViewMode('grid')"
+            aria-label="Grid view"
+          >
+            <app-sds-icon name="table" [size]="16"></app-sds-icon>
+          </button>
+          <button
+            type="button"
+            class="view-mode-btn"
+            [class.is-active]="viewMode() === 'list'"
+            (click)="setViewMode('list')"
+            aria-label="List view"
+          >
+            <app-sds-icon name="hamburger-menu" [size]="16"></app-sds-icon>
+          </button>
+        </div>
       </div>
-
-      <a routerLink="/agent-creation/startup" sdsButton variant="primary">
-        <app-sds-icon name="add" [size]="16"></app-sds-icon>
-        Create Agent
-      </a>
     </div>
 
-    <section class="tab-panel" brnTabsContent="agents">
-      <div class="controls-row">
-        <label class="page-search" sdsSearchField for="agent-search-input">
-          <input
-            id="agent-search-input"
-            type="search"
-            placeholder="Search here"
-            [value]="agentSearchValue()"
-            (input)="onAgentSearchInput($any($event.target).value)"
-          />
-          <app-sds-icon name="search" [size]="16"></app-sds-icon>
-        </label>
+    @if (viewMode() === 'grid') {
+      <div class="agent-grid">
+        @for (agent of agentList(); track trackAgent($index, agent)) {
+          <article
+            class="agent-card"
+            role="button"
+            tabindex="0"
+            [class.is-highlighted]="highlightedAgentId() === agent.id"
+            (click)="openAgent(agent, $event)"
+            (keydown.enter)="openAgent(agent, $event)"
+            (keydown.space)="openAgent(agent, $event)"
+          >
+            <div class="card-menu-anchor">
+              <button
+                type="button"
+                class="card-menu-button"
+                sdsIconButton
+                variant="ghost"
+                size="xs"
+                aria-label="More actions"
+                [attr.aria-expanded]="isMenuOpen(agent.id)"
+                (click)="toggleMenu(agent.id, $event)"
+              >
+                <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+              </button>
 
-        <div class="controls-right">
-          <div class="state-filter" sdsSelect [value]="stateFilter()" (valueChange)="onStateFilterChange($event)">
-            <sds-select-trigger>
-              <span class="select-display-label">{{ currentStateLabel() }}</span>
-            </sds-select-trigger>
-
-            <sds-select-content *sdsSelectPortal>
-              @for (option of stateOptions; track trackOption($index, option)) {
-                <sds-select-item [value]="option.value">{{ option.label }}</sds-select-item>
+              @if (isMenuOpen(agent.id)) {
+                <div class="card-action-menu" role="menu" aria-label="Agent actions">
+                  @for (action of getAgentActions(agent); track action) {
+                    <button
+                      type="button"
+                      class="card-action-item"
+                      [class.is-danger]="action === 'Delete'"
+                      role="menuitem"
+                      (click)="onAgentAction(agent, action, $event)"
+                    >
+                      {{ action }}
+                    </button>
+                  }
+                </div>
               }
-            </sds-select-content>
-          </div>
+            </div>
 
-          <button type="button" sdsIconButton aria-label="Filter">
-            <app-sds-icon name="funnel" [size]="18"></app-sds-icon>
-          </button>
+            <span class="agent-card-icon">
+              <img [src]="getAgentIconSrc(agent)" [alt]="agent.name + ' icon'" />
+            </span>
 
-          <div class="view-toggle" aria-label="View mode">
-            <button
-              type="button"
-              class="view-mode-btn"
-              [class.is-active]="viewMode() === 'grid'"
-              (click)="setViewMode('grid')"
-              aria-label="Grid view"
-            >
-              <app-sds-icon name="table" [size]="16"></app-sds-icon>
-            </button>
-            <button
-              type="button"
-              class="view-mode-btn"
-              [class.is-active]="viewMode() === 'list'"
-              (click)="setViewMode('list')"
-              aria-label="List view"
-            >
-              <app-sds-icon name="hamburger-menu" [size]="16"></app-sds-icon>
-            </button>
-          </div>
-        </div>
+            <h3>{{ agent.name }}</h3>
+            <p>{{ agent.description }}</p>
+
+            <footer class="agent-meta">
+              <span class="agent-status" [attr.data-status]="getAgentStatus(agent).toLowerCase()">
+                @switch (getAgentStatus(agent)) {
+                  @case ('Draft') {
+                    <app-sds-icon name="file-text" [size]="12"></app-sds-icon>
+                  }
+                  @case ('Deactivated') {
+                    <app-sds-icon name="circle-x" [size]="12"></app-sds-icon>
+                  }
+                  @default {
+                    <img class="status-icon" src="assets/icons/agents/status-active.svg" alt="" aria-hidden="true" />
+                  }
+                }
+                {{ getAgentStatus(agent) }}
+              </span>
+
+              @if (getAgentStatus(agent) !== 'Draft' && getAgentSessions(agent) !== null) {
+                <span class="agent-sessions">
+                  <span class="sessions-spark" aria-hidden="true"></span>
+                  <span class="sessions-text"><span class="sessions-count">{{ getAgentSessions(agent) }}</span> Sessions</span>
+                </span>
+              }
+            </footer>
+          </article>
+        }
       </div>
+    } @else {
+      <div class="agent-list-table-wrap">
+        <table class="agent-list-table" aria-label="Agents list view">
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Status</th>
+              <th>Sessions</th>
+              <th>Projects</th>
+              <th>Created On</th>
+              <th>Updated On</th>
+              <th>Updated By</th>
+              <th class="actions-head">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (agent of pagedAgents(); track trackAgent($index, agent)) {
+              <tr
+                tabindex="0"
+                [class.is-highlighted]="highlightedAgentId() === agent.id"
+                (click)="openAgent(agent, $event)"
+                (keydown.enter)="openAgent(agent, $event)"
+                (keydown.space)="openAgent(agent, $event)"
+              >
+                <td class="name-cell">{{ agent.name }}</td>
+                <td>
+                  <span class="agent-status-pill" [attr.data-status]="getAgentStatus(agent).toLowerCase()">
+                    {{ getAgentStatus(agent) }}
+                  </span>
+                </td>
+                <td class="sessions-cell">
+                  @if (getAgentStatus(agent) !== 'Draft' && getAgentSessions(agent) !== null) {
+                    <span class="agent-sessions">
+                      <span class="sessions-spark" aria-hidden="true"></span>
+                      <span class="sessions-text">{{ getAgentSessions(agent) }}</span>
+                    </span>
+                  } @else {
+                    <span class="muted-dash">—</span>
+                  }
+                </td>
+                <td>{{ getAgentProject(agent) }}</td>
+                <td>{{ getAgentCreatedOn(agent) }}</td>
+                <td>{{ getAgentUpdatedOn(agent) }}</td>
+                <td>{{ getAgentUpdatedBy(agent) }}</td>
+                <td class="actions-cell">
+                  <div class="row-menu-anchor">
+                    <button
+                      type="button"
+                      class="card-menu-button"
+                      sdsIconButton
+                      variant="ghost"
+                      size="xs"
+                      aria-label="More actions"
+                      [attr.aria-expanded]="isMenuOpen(agent.id)"
+                      (click)="toggleMenu(agent.id, $event)"
+                    >
+                      <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
+                    </button>
 
-      @if (viewMode() === 'grid') {
-        <div class="agent-grid">
-          @for (agent of agents$ | async; track trackAgent($index, agent)) {
-            <article class="agent-card" [class.is-highlighted]="highlightedAgentId() === agent.id">
-              <div class="card-menu-anchor">
-                <button
-                  type="button"
-                  class="card-menu-button"
-                  sdsIconButton
-                  variant="ghost"
-                  size="xs"
-                  aria-label="More actions"
-                  [attr.aria-expanded]="isMenuOpen(agent.id)"
-                  (click)="toggleMenu(agent.id, $event)"
-                >
-                  <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
-                </button>
-
-                @if (isMenuOpen(agent.id)) {
-                  <div class="card-action-menu" role="menu" aria-label="Agent actions">
-                    @for (action of getAgentActions(agent); track action) {
-                      <button type="button" class="card-action-item" role="menuitem" (click)="onAgentAction(agent, action, $event)">
-                        {{ action }}
-                      </button>
+                    @if (isMenuOpen(agent.id)) {
+                      <div class="card-action-menu row-action-menu" role="menu" aria-label="Agent actions">
+                        @for (action of getAgentActions(agent); track action) {
+                          <button
+                            type="button"
+                            class="card-action-item"
+                            [class.is-danger]="action === 'Delete'"
+                            role="menuitem"
+                            (click)="onAgentAction(agent, action, $event)"
+                          >
+                            {{ action }}
+                          </button>
+                        }
+                      </div>
                     }
                   </div>
-                }
-              </div>
-
-              <h3>{{ agent.name }}</h3>
-              <p>{{ agent.description }}</p>
-
-              <footer class="agent-meta">
-                <span class="agent-category">
-                  <span class="category-dot" [attr.data-accent]="agent.accent"></span>
-                  {{ agent.category }}
-                </span>
-
-                <span class="agent-status" [attr.data-status]="getAgentStatus(agent).toLowerCase()">
-                  <span class="status-dot"></span>
-                  {{ getAgentStatus(agent) }}
-                  <span class="meta-divider">|</span>
-                  {{ agent.updatedLabel }}
-                </span>
-              </footer>
-            </article>
-          }
-        </div>
-      } @else {
-        <div class="agent-list-table-wrap">
-          <table class="agent-list-table" aria-label="Agents list view">
-            <thead>
-              <tr>
-                <th>Agent Name</th>
-                <th>Status</th>
-                <th>Projects</th>
-                <th>Created On</th>
-                <th>Updated On</th>
-                <th>Updated By</th>
-                <th class="actions-head">Actions</th>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              @for (agent of agents$ | async; track trackAgent($index, agent)) {
-                <tr [class.is-highlighted]="highlightedAgentId() === agent.id">
-                  <td class="name-cell">{{ agent.name }}</td>
-                  <td>
-                    <span class="agent-status-pill" [attr.data-status]="getAgentStatus(agent).toLowerCase()">
-                      {{ getAgentStatus(agent) }}
-                    </span>
-                  </td>
-                  <td>{{ getAgentProject(agent) }}</td>
-                  <td>{{ getAgentCreatedOn(agent) }}</td>
-                  <td>{{ getAgentUpdatedOn(agent) }}</td>
-                  <td>{{ getAgentUpdatedBy(agent) }}</td>
-                  <td class="actions-cell">
-                    <div class="row-menu-anchor">
-                      <button
-                        type="button"
-                        class="card-menu-button"
-                        sdsIconButton
-                        variant="ghost"
-                        size="xs"
-                        aria-label="More actions"
-                        [attr.aria-expanded]="isMenuOpen(agent.id)"
-                        (click)="toggleMenu(agent.id, $event)"
-                      >
-                        <app-sds-icon name="kebab" [size]="16"></app-sds-icon>
-                      </button>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
 
-                      @if (isMenuOpen(agent.id)) {
-                        <div class="card-action-menu row-action-menu" role="menu" aria-label="Agent actions">
-                          @for (action of getAgentActions(agent); track action) {
-                            <button
-                              type="button"
-                              class="card-action-item"
-                              role="menuitem"
-                              (click)="onAgentAction(agent, action, $event)"
-                            >
-                              {{ action }}
-                            </button>
-                          }
-                        </div>
-                      }
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+    @if (viewMode() === 'list') {
+    <footer class="list-footer">
+      <span class="footer-summary">{{ pageRangeStart() }}–{{ pageRangeEnd() }} of {{ totalAgents() }} records</span>
+      <nav class="footer-pages" aria-label="Agents pagination">
+        <button type="button" class="page-link page-arrow" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)" aria-label="Previous page">
+          <app-sds-icon name="arrow-left" [size]="16"></app-sds-icon>
+        </button>
+        @for (page of pageNumbers(); track page) {
+          <button type="button" class="page-link" [class.is-active]="page === currentPage()" (click)="goToPage(page)">{{ page }}</button>
+        }
+        <button type="button" class="page-link page-arrow" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)" aria-label="Next page">
+          <app-sds-icon name="arrow-right" [size]="16"></app-sds-icon>
+        </button>
+      </nav>
+      <div class="perpage-select" sdsSelect [value]="pageSize().toString()" (valueChange)="onPageSizeChange($event)">
+        <sds-select-trigger>
+          <span class="select-display-label">{{ pageSize() }} per page</span>
+        </sds-select-trigger>
+
+        <sds-select-content *sdsSelectPortal>
+          @for (size of pageSizeOptions; track size) {
+            <sds-select-item [value]="size" [disabled]="+size > totalAgents()">{{ size }} per page</sds-select-item>
+          }
+        </sds-select-content>
+      </div>
+    </footer>
+    }
+  </section>
+
+  @if (pendingDeleteAgent(); as agentToDelete) {
+    <div class="delete-dialog-backdrop" role="presentation" (click)="cancelDeleteAgent()">
+      <section
+        class="delete-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-agent-title"
+        (click)="$event.stopPropagation()"
+      >
+        <h2 id="delete-agent-title">Delete Active Agent?</h2>
+        <p>
+          {{ agentToDelete.name }} is currently Active. Deleting it will remove it from Agent Hub.
+        </p>
+
+        <div class="delete-dialog-actions">
+          <button type="button" sdsButton variant="secondary" (click)="cancelDeleteAgent()">Cancel</button>
+          <button type="button" sdsButton variant="primary" (click)="confirmDeleteAgent()">Delete Agent</button>
         </div>
-      }
-    </section>
-
-    <section class="tab-panel projects-panel" brnTabsContent="projects">
-      <article class="projects-placeholder">
-        <h2>Projects view is ready</h2>
-        <p>Share the Projects Figma node when you are ready and we will build it next.</p>
-      </article>
-    </section>
-  </main>
+      </section>
+    </div>
+  }
 </div>
