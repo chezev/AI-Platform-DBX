@@ -32,7 +32,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       # base-href must match the repo name so assets resolve under the sub-path.
       - run: npm run build -- --base-href=/AI-Platform-DBX/
       # SPA fallback so refreshing a deep link doesn't 404.
